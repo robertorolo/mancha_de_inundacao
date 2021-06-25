@@ -67,29 +67,18 @@ def calcular1():
     global criov
     criov = crio(v)
     print('Comprimento do rio {} km'.format(criov))
-    global cota_tal
-    cota_tal = list(srtm.sample([(ponto_informado.x, ponto_informado.y)]))
-    cota_tal = cota_tal[0][0]
-    global cota_cor 
-    cota_cor = cota_tal + h
-    print('cota do talvegue: {}; cota do coroamento {}'.format(cota_tal, cota_cor))
+    #global cota_tal
+    #cota_tal = list(srtm.sample([(ponto_informado.x, ponto_informado.y)]))
+    #cota_tal = cota_tal[0][0]
+    #global cota_cor 
+    #cota_cor = cota_tal + h
+    #print('cota do talvegue: {}; cota do coroamento {}'.format(cota_tal, cota_cor))
     global q_barr 
     q_barr = qmax_barragem(h, v)
     print('vazão máxima na seção da barragem: {} m³/s'.format(q_barr))
 
 def calcular2():
     pass
-
-def plotar1():
-    fig, ax = plt.subplots(figsize=(8,8))
-    show(srtm, ax=ax)
-
-    ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
-
-    tracado.plot(ax=ax, color='red')
-    
-    plt.legend()
-    plt.show()
 
 def plotar2():
     fig, ax = plt.subplots(figsize=(8,8))
@@ -142,21 +131,18 @@ entry_v.grid(row=4, column=1, sticky='E', padx=10, pady=10)
 
 #btns
 btn_tracado = Button(root, text="Carregar traçado do rio", command=carregar_tracado)
-btn_tracado.grid(row=5, column=0, sticky='W', padx=10, pady=10)
+btn_tracado.grid(row=1, column=2, sticky='W', padx=10, pady=10)
 
 btn_srtm = Button(root, text="Carregar SRTM", command=carregar_srtm)
-btn_srtm.grid(row=6, column=0, sticky='W', padx=10, pady=10)
+btn_srtm.grid(row=2, column=2, sticky='W', padx=10, pady=10)
 
 btn_calcular1 = Button(root, text="Calcular", command=calcular1)
 btn_calcular1.grid(row=7, column=1, sticky='E', padx=10, pady=10)
 
-btn_plotar1 = Button(root, text="Plotar", command=plotar1)
-btn_plotar1.grid(row=8, column=1, sticky='E', padx=10, pady=10)
-
 btn_calcular2 = Button(root, text="Calcular", command=calcular2)
-btn_calcular2.grid(row=1, column=2, sticky='W', padx=10, pady=10)
+btn_calcular2.grid(row=3, column=2, sticky='E', padx=10, pady=10)
 
 btn_plotar2 = Button(root, text="Plotar", command=plotar2)
-btn_plotar2.grid(row=2, column=2, sticky='E', padx=10, pady=10)
+btn_plotar2.grid(row=4, column=2, sticky='E', padx=10, pady=10)
 
 root.mainloop()
