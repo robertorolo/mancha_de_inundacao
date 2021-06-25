@@ -6,8 +6,9 @@ import rasterio
 from rasterio.plot import show
 import matplotlib.pyplot as plt
 import fiona
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 import numpy as np
+from scipy.interpolate import interp1d
 
 fiona.supported_drivers['KML'] = 'rw'
 
@@ -35,9 +36,25 @@ def qmax_secao(x, q_max_barr, volume):
         b = -0.20047 * (volume + 25000) ** -0.5979
         return q_max_barr * a * np.exp(b*x)
 
-def suavizar_tracado():
-    print(tracado)
-    tracado_simplificado = tracado['geometry'].simplify(5)
+def suavizar_tracado(tracado, d=10):
+    tracado = tracado.to_crs(epsg=31982)
+    x = []
+    y = []
+    x = [tracado['geometry'][0].coords[:][i][0] for i in range(len(tracado['geometry'][0].coords[:]))]
+    y = [tracado['geometry'][0].coords[:][i][1] for i in range(len(tracado['geometry'][0].coords[:]))]
+    
+    #o metodo de interpolacao nao esta bom alterar isso no futuro
+    theta = np.polyfit(x, y, deg=d)
+    model = np.poly1d(theta)
+    yi = [model(i) for i in x]
+
+    ls = LineString([Point(i, j) for i, j in zip(x, yi)])
+    data = ['tracado do rio suavizado', '', ls]
+    tracado.loc[len(tracado)] = data
+
+    tracado = tracado.to_crs(epsg=4674)
+
+    return tracado
 
 def carregar_tracado():
     print('Lendo traçado do rio...')
