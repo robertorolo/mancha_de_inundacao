@@ -1,5 +1,5 @@
 #importando pacotes 
-from tkinter import Tk, Label, Button, Entry
+from tkinter import Tk, Label, Button, Entry, Checkbutton, IntVar
 from tkinter.filedialog import askopenfilename, asksaveasfile
 import geopandas
 import rasterio
@@ -7,54 +7,9 @@ from rasterio.plot import show
 import matplotlib.pyplot as plt
 import fiona
 from shapely.geometry import Point, LineString
-import numpy as np
-from scipy.interpolate import interp1d
 
 fiona.supported_drivers['KML'] = 'rw'
 
-#definindo funcoes
-def crio(volume):
-    volume = volume * 10e-6
-    # Calcula o comprimento do rio a ser modelado (sobre o rio suavizado)
-    crio = 0.0000000887*float(volume)**3 - 0.00026*float(volume)**2 + 0.265*float(volume) + 6.74
-    if crio < 5.0:
-        crio = 5.0
-    if crio > 100.0:
-        crio = 100.0
-    return crio
-
-def qmax_barragem(altura, volume):
-    mmc = 0.0039 * volume ** 0.8122
-    froe = 0.607 * (volume ** 0.295 * altura ** 1.24)
-    return max(mmc, froe)
-
-def qmax_secao(x, q_max_barr, volume):
-    if volume * 10e-6 > 6.2:
-        return q_max_barr * 10 ** (-0.01243*x)
-    else:
-        a = 0.002 * np.log(volume) + 0.9626
-        b = -0.20047 * (volume + 25000) ** -0.5979
-        return q_max_barr * a * np.exp(b*x)
-
-def suavizar_tracado(tracado, d=10):
-    tracado = tracado.to_crs(epsg=31982)
-    x = []
-    y = []
-    x = [tracado['geometry'][0].coords[:][i][0] for i in range(len(tracado['geometry'][0].coords[:]))]
-    y = [tracado['geometry'][0].coords[:][i][1] for i in range(len(tracado['geometry'][0].coords[:]))]
-    
-    #o metodo de interpolacao nao esta bom alterar isso no futuro
-    theta = np.polyfit(x, y, deg=d)
-    model = np.poly1d(theta)
-    yi = [model(i) for i in x]
-
-    ls = LineString([Point(i, j) for i, j in zip(x, yi)])
-    data = ['tracado do rio suavizado', '', ls]
-    tracado.loc[len(tracado)] = data
-
-    tracado = tracado.to_crs(epsg=4674)
-
-    return tracado
 
 def carregar_tracado():
     print('Lendo traçado do rio...')
@@ -95,7 +50,13 @@ def calcular1():
     print('vazão máxima na seção da barragem: {} m³/s'.format(q_barr))
 
 def calcular2():
-    pass
+    global tracado
+    if suavizar.get() == 1:
+        print('entrou')
+        tracado = suavizar_tracado(tracado, d=10)
+
+    print(tracado)
+    
 
 def plotar2():
     fig, ax = plt.subplots(figsize=(8,8))
@@ -103,7 +64,9 @@ def plotar2():
 
     ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
 
-    tracado.plot(ax=ax, color='red')
+    tracado.iloc[0].plot(ax=ax, color='red')
+    tracado.iloc[1].plot(ax=ax, color='blue')
+
     
     plt.legend()
     plt.show()
@@ -150,6 +113,10 @@ entry_v.grid(row=4, column=1, sticky='E', padx=10, pady=10)
 btn_tracado = Button(root, text="Carregar traçado do rio", command=carregar_tracado)
 btn_tracado.grid(row=1, column=2, sticky='W', padx=10, pady=10)
 
+suavizar = IntVar()
+suavizar_tracado = Checkbutton(root, variable=suavizar, onvalue=1, offvalue=0, text='Suavizar traçado')
+suavizar_tracado.grid(row=1, column=3, sticky='E', padx=10, pady=10)
+
 btn_srtm = Button(root, text="Carregar SRTM", command=carregar_srtm)
 btn_srtm.grid(row=2, column=2, sticky='W', padx=10, pady=10)
 
@@ -157,9 +124,9 @@ btn_calcular1 = Button(root, text="Calcular", command=calcular1)
 btn_calcular1.grid(row=7, column=1, sticky='E', padx=10, pady=10)
 
 btn_calcular2 = Button(root, text="Calcular", command=calcular2)
-btn_calcular2.grid(row=3, column=2, sticky='E', padx=10, pady=10)
+btn_calcular2.grid(row=3, column=3, sticky='E', padx=10, pady=10)
 
 btn_plotar2 = Button(root, text="Plotar", command=plotar2)
-btn_plotar2.grid(row=4, column=2, sticky='E', padx=10, pady=10)
+btn_plotar2.grid(row=4, column=3, sticky='E', padx=10, pady=10)
 
 root.mainloop()
