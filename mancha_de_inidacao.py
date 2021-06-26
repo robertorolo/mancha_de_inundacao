@@ -1,5 +1,6 @@
 import numpy as np
 from shapely.geometry import Point, LineString
+from pyproj import Proj, transform
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -66,7 +67,6 @@ def split_linha(tracado):
     return line_split
 
 def perpendicular(linha, ponto, comprimento=4000):
-    #definido slope da linha
     rp1, rp2 = linha.coords[:][0], linha.coords[:][1]
     slope=(rp2[1]-rp1[1])/(rp2[0]-rp1[0])
     (rp2[1]-rp1[1])/(rp2[0]-rp1[0])
@@ -91,7 +91,26 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
         for line in l:
             if line.distance(point) < tol:
                 perp = perpendicular(line, point)
-                data = ['seçao {}'.format(i), d[i], perp]
+                data = ['seçao {}'.format(i), d[1:][i], perp]
                 tracado.loc[len(tracado)] = data
 
     return tracado
+
+def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
+    tracado.crs = 'EPSG:31982'
+    tracado = tracado.to_crs(epsg=4674)
+    tracado.to_file(nome_do_arquivo)
+
+def cotas_secoes(tracado, srtm):
+    inProj = Proj('epsg:31982')
+    outProj = Proj('epsg:4674')
+    cotas = []
+    for linha in tracado.iloc[2:]['geometry']:
+        p, d = pontos_tracado(linha, n=81)
+        p = [i.coords[:][0] for i in p]
+        pt = [(transform(inProj,outProj,i[0],i[1])) for i in p]
+        pt = [(i[1], i[0]) for i in pt]
+        cota = list(srtm.sample(pt[1:]))
+        cota = [k[0] for k in cota]
+        cotas.append(cota)
+    return cotas, d[1:]
