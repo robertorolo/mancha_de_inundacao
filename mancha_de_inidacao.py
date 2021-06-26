@@ -87,11 +87,11 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
     p, d = pontos_tracado(tracado.iloc[1]['geometry'], n)
     l = split_linha(tracado)
     tol = 1e-8
-    for i, point in enumerate(p[1:]):
+    for i, point in enumerate(p):
         for line in l:
             if line.distance(point) < tol:
                 perp = perpendicular(line, point)
-                data = ['seçao {}'.format(i), d[1:][i], perp]
+                data = ['seçao {}'.format(i), d[i], perp]
                 tracado.loc[len(tracado)] = data
 
     return tracado
@@ -110,7 +110,7 @@ def cotas_secoes(tracado, srtm):
         p = [i.coords[:][0] for i in p]
         pt = [(transform(inProj,outProj,i[0],i[1])) for i in p]
         pt = [(i[1], i[0]) for i in pt]
-        cota = list(srtm.sample(pt[1:]))
+        cota = list(srtm.sample(pt))
         cota = [k[0] for k in cota]
         cotas.append(cota)
-    return cotas, d[1:]
+    return cotas, d
