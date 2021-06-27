@@ -18,7 +18,9 @@ def qmax_barragem(altura, volume):
     return max(mmc, froe)
 
 def qmax_secao(x, q_max_barr, volume):
-    if volume * 10e-6 > 6.2:
+    volume = volume * 10e-6
+    x = x * 10e-3
+    if volume > 6.2:
         return q_max_barr * 10 ** (-0.01243*x)
     else:
         a = 0.002 * np.log(volume) + 0.9626
@@ -94,7 +96,7 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
                 data = ['seçao {}'.format(i), d[i], perp]
                 tracado.loc[len(tracado)] = data
 
-    return tracado
+    return tracado, d
 
 def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     tracado.crs = 'EPSG:31982'
