@@ -8,8 +8,10 @@ def crio(volume):
     crio = 0.0000000887*float(volume)**3 - 0.00026*float(volume)**2 + 0.265*float(volume) + 6.74
     if crio < 5.0:
         crio = 5.0
-    if crio > 100.0:
+    elif crio > 100.0:
         crio = 100.0
+    else:
+        crio = crio
     return crio
 
 def qmax_barragem(altura, volume):
@@ -30,15 +32,15 @@ def qmax_secao(x, q_max_barr, volume):
 def pontos_tracado(linha, n=21):
     distances = np.linspace(0, linha.length, n)
     points = [linha.interpolate(distance) for distance in distances]
-    
+
     return points, distances
 
 def cotas(ponto_informado, srtm, altura):
     cota_tal = list(srtm.sample([(ponto_informado.x, ponto_informado.y)]))
     cota_tal = cota_tal[0][0]
-    
+
     cota_cor = cota_tal + altura
-    
+
     return cota_tal, cota_cor
 
 def simplificar_tracado(tracado, n):
@@ -46,10 +48,10 @@ def simplificar_tracado(tracado, n):
 
     distances = np.linspace(0, tracado.length, n)
     points = [tracado.interpolate(distance) for distance in distances]
-    
+
     x = [point.x[0] for point in points]
     y = [point.y[0] for point in points]
-    
+
     ls = LineString([Point(i, j) for i, j in zip(x, y)])
     data = ['tracado do rio simplificado', '', ls]
     tracado.loc[len(tracado)] = data
@@ -58,21 +60,21 @@ def simplificar_tracado(tracado, n):
 
 def split_linha(tracado):
     line_split = []
-    coords = tracado.iloc[1]['geometry'].coords[:] 
+    coords = tracado.iloc[1]['geometry'].coords[:]
     for i in range(len(coords)):
         if i < len(coords)-1:
             a = coords[i]
             b = coords[i+1]
             l = LineString([a, b])
             line_split.append(l)
-    
+
     return line_split
 
 def perpendicular(linha, ponto, comprimento=4000):
     rp1, rp2 = linha.coords[:][0], linha.coords[:][1]
     slope=(rp2[1]-rp1[1])/(rp2[0]-rp1[0])
     (rp2[1]-rp1[1])/(rp2[0]-rp1[0])
-    
+
     C, D = [0,0], [0,0]
     B = ponto.coords[:][0]
     dy = np.sqrt((comprimento/2)**2/(slope**2+1))
