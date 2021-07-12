@@ -1,8 +1,8 @@
 import numpy as np
+import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString
 from pyproj import Proj, transform
 import math
-import matplotlib.pyplot as plt
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -121,11 +121,9 @@ def cotas_secoes(tracado, srtm):
         cotas.append(cota)
     return cotas, d
 
-def raio_hidraulico(y, x, h):
+def raio_hidraulico(y, x):
     y, x = np.array(y), np.array(x)
     yt = 1 - y + max(y)
-    plt.figure()
-    plt.plot(x, yt)
     hs = np.linspace(0, max(yt), 11)
     areas = []
     radius = []
@@ -133,9 +131,6 @@ def raio_hidraulico(y, x, h):
         ytt = yt - (max(yt) - h)
         f = ytt > 0
         ytt, xt = ytt[f], x[f]
-        plt.figure()
-        plt.plot(xt, ytt)
-        plt.show()
         area = np.trapz(y=ytt, x=xt)
         distances = []
         for i in range(len(ytt)):
@@ -145,8 +140,14 @@ def raio_hidraulico(y, x, h):
         perimeter = np.sum(distances)
         areas.append(area)
         radius.append(area/perimeter)
-    return areas, radius
+    return areas, radius, hs
 
 def manning(a, r, j, k=15):
+    a, r = np.array(a), np.array(r)
     q = k*a*r**(2/3)*j**(1/2)
     return q
+
+def polyfit(x, y, x_i):
+    coefs = poly.polyfit(x, y, 3)
+    ffit = poly.polyval(x_i, coefs)
+    return ffit
