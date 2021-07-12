@@ -1,7 +1,8 @@
 import numpy as np
 import numpy.polynomial.polynomial as poly
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, box
 from pyproj import Proj, transform
+from shapely.ops import transform as tsf
 import math
 
 def crio(volume):
@@ -151,3 +152,19 @@ def polyfit(x, y, x_i):
     coefs = poly.polyfit(x, y, 3)
     ffit = poly.polyval(x_i, coefs)
     return ffit
+
+def clip_raster(secs, srtm):
+    inProj = Proj('epsg:31982') #meter
+    outProj = Proj('epsg:4674') #degrees
+    project = pyproj.Transformer.from_proj(inProj, outProj, always_xy=True)
+    minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
+    bbox = box(minx, miny, maxx, maxy)
+    bbox = tsf(project.transform, bbox)
+    out_image, out_transform = rasterio.mask.mask(srtm, [bbox], crop=True)
+    out_meta = srtm.meta
+    out_meta.update({"driver": "GTiff",
+                 "height": out_image.shape[1],
+                 "width": out_image.shape[2],
+                 "transform": out_transform})
+    with rasterio.open('srtm_cropado', 'w', **out_meta) as dest:
+        dest.write(out_image)
