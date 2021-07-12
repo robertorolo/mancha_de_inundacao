@@ -1,9 +1,12 @@
 import numpy as np
 import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString, box
+import pyproj
 from pyproj import Proj, transform
 from shapely.ops import transform as tsf
 import math
+import rasterio.mask
+import rasterio
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -105,12 +108,12 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
 
 def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     tracado.crs = 'EPSG:31982'
-    tracado = tracado.to_crs(epsg=4674)
+    tracado = tracado.to_crs(epsg=4326)
     tracado.to_file(nome_do_arquivo)
 
 def cotas_secoes(tracado, srtm):
     inProj = Proj('epsg:31982')
-    outProj = Proj('epsg:4674')
+    outProj = Proj('epsg:4326')
     cotas = []
     for linha in tracado.iloc[2:]['geometry']:
         p, d = pontos_tracado(linha, n=81)
@@ -154,12 +157,10 @@ def polyfit(x, y, x_i):
     return ffit
 
 def clip_raster(secs, srtm):
-    inProj = Proj('epsg:31982') #meter
-    outProj = Proj('epsg:4674') #degrees
-    project = pyproj.Transformer.from_proj(inProj, outProj, always_xy=True)
+    secs.crs = 'EPSG:31982'
+    secs = secs.to_crs(epsg=4326)
     minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
     bbox = box(minx, miny, maxx, maxy)
-    bbox = tsf(project.transform, bbox)
     out_image, out_transform = rasterio.mask.mask(srtm, [bbox], crop=True)
     out_meta = srtm.meta
     out_meta.update({"driver": "GTiff",
