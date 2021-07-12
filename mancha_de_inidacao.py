@@ -1,6 +1,8 @@
 import numpy as np
 from shapely.geometry import Point, LineString
 from pyproj import Proj, transform
+import math
+import matplotlib.pyplot as plt
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -118,3 +120,33 @@ def cotas_secoes(tracado, srtm):
         cota = [k[0] for k in cota]
         cotas.append(cota)
     return cotas, d
+
+def raio_hidraulico(y, x, h):
+    y, x = np.array(y), np.array(x)
+    yt = 1 - y + max(y)
+    plt.figure()
+    plt.plot(x, yt)
+    hs = np.linspace(0, max(yt), 11)
+    areas = []
+    radius = []
+    for h in hs[1:]:
+        ytt = yt - (max(yt) - h)
+        f = ytt > 0
+        ytt, xt = ytt[f], x[f]
+        plt.figure()
+        plt.plot(xt, ytt)
+        plt.show()
+        area = np.trapz(y=ytt, x=xt)
+        distances = []
+        for i in range(len(ytt)):
+            if i < len(ytt) - 1:
+                d = math.hypot(xt[i+1]-xt[i], ytt[i+1]-ytt[i])
+                distances.append(d)
+        perimeter = np.sum(distances)
+        areas.append(area)
+        radius.append(area/perimeter)
+    return areas, radius
+
+def manning(a, r, j, k=15):
+    q = k*a*r**(2/3)*j**(1/2)
+    return q
