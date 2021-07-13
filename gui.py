@@ -74,11 +74,11 @@ def calcular_perpendiculares():
     plt.show()
  
 def calcular():
-    eps = entry_eps.get()
-    if eps != 'auto':
-        eps = float(eps.replace(',','.'))
-    else:
-        eps = None
+    #eps = entry_eps.get()
+    #if eps != 'auto':
+    #    eps = float(eps.replace(',','.'))
+    #else:
+    #    eps = None
 
     qmax_barr = qmax_barragem(h, v)
     cotas(ponto_informado, srtm, h)
@@ -110,12 +110,26 @@ def calcular():
 
     coords, z = get_coordinates(clipado)
 
-    v_int = rbf_interpolation(x_all, y_all, h_all, coords[0], coords[1], eps)
+    v_int = rbf_interpolation(x_all, y_all, h_all, coords[0], coords[1])
     mancha = np.where(v_int > z, 1, 0)
     
     plt.figure(figsize=(8,8))
     plt.scatter(coords[0], coords[1], c=mancha)
     plt.show()
+
+def importar_secoes():
+    global s
+    s = geopandas.read_file('tracado_exportado.shp')
+    btn_import["text"] = "Traçado importado"
+
+def exportar_secoes():
+    #secoes = asksaveasfile(defaultextension=".shp")
+    #global shape_flname
+    #shape_flname = secoes.name
+    #rint(shape_flname)
+
+    exportar_geopandas(s, nome_do_arquivo='tracado_exportado.shp')
+    btn_export["text"] = "Traçado exportado"
 
 #GUI
 root = Tk()
@@ -184,7 +198,7 @@ btn_srtm.grid(row=1, column=0, sticky='W', padx=10, pady=10)
 label_suavi = Label(tab2, text="Número de retas para simplificação:")
 label_suavi.grid(row=2, column=0, sticky='W', padx=10, pady=10)
 entry_suavi = Entry(tab2, width=8)
-entry_suavi.insert(0, "5")
+entry_suavi.insert(0, "8")
 entry_suavi.grid(row=2, column=1, sticky='E', padx=10, pady=10)
 
 label_comp = Label(tab2, text="Comprimento das seções (m):")
@@ -193,17 +207,16 @@ entry_comp = Entry(tab2, width=8)
 entry_comp.insert(0, "4000")
 entry_comp.grid(row=3, column=1, sticky='E', padx=10, pady=10)
 
-btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=4, column=1, sticky='E', padx=10, pady=10)
+btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
+btn_export.grid(row=4, column=0, sticky='W', padx=10, pady=10)
 
-#Tab3
-label_eps = Label(tab3, text="Espilon (m):")
-label_eps.grid(row=0, column=0, sticky='W', padx=10, pady=10)
-entry_eps = Entry(tab3, width=8)
-entry_eps.insert(0, "auto")
-entry_eps.grid(row=0, column=1, sticky='E', padx=10, pady=10)
+btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
+btn_import.grid(row=4, column=1, sticky='W', padx=10, pady=10)
+
+btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
+btn_calculartab2.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
-btn_calculartab3.grid(row=4, column=1, sticky='E', padx=10, pady=10)
+btn_calculartab3.grid(row=0, column=0, sticky='E', padx=10, pady=10)
 
 root.mainloop()
