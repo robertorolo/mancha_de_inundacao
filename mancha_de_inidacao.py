@@ -6,6 +6,7 @@ from pyproj import Proj, Transformer, transform
 import math
 import rasterio.mask
 import rasterio
+from scipy.interpolate import Rbf
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -195,3 +196,9 @@ def get_coordinates(clipado):
     x, y = [i[0] for i in ij], [j[1] for j in ij]
     ij = transformacao(y, x, d_to_m=True, new=True)
     return ij, b
+
+def rbf_interpolation(x, y, v, xi, yi):
+    x, y, z, d = x, y, np.zeros(len(x)), v
+    rbfi = Rbf(x, y, z, d)  # radial basis function interpolator instance
+    di = rbfi(xi, yi, zi)   # interpolated values
+    return di
