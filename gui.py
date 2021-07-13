@@ -1,6 +1,6 @@
 #importando pacotes 
 from tkinter import Tk, ttk, Label, Button, Entry, StringVar
-from tkinter.filedialog import askopenfilename, asksaveasfile
+from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
 import geopandas
 import rasterio
 from rasterio.plot import show
@@ -74,11 +74,6 @@ def calcular_perpendiculares():
     plt.show()
  
 def calcular():
-    #eps = entry_eps.get()
-    #if eps != 'auto':
-    #    eps = float(eps.replace(',','.'))
-    #else:
-    #    eps = None
 
     qmax_barr = qmax_barragem(h, v)
     cotas(ponto_informado, srtm, h)
@@ -119,16 +114,14 @@ def calcular():
 
 def importar_secoes():
     global s
-    s = geopandas.read_file('tracado_exportado.shp')
+    s = geopandas.read_file(shape_flname)
     btn_import["text"] = "Traçado importado"
 
 def exportar_secoes():
-    #secoes = asksaveasfile(defaultextension=".shp")
-    #global shape_flname
-    #shape_flname = secoes.name
-    #rint(shape_flname)
-
-    exportar_geopandas(s, nome_do_arquivo='tracado_exportado.shp')
+    global shape_flname
+    shape_flname = asksaveasfilename(defaultextension=".shp")
+    
+    exportar_geopandas(s, nome_do_arquivo=shape_flname)
     btn_export["text"] = "Traçado exportado"
 
 #GUI
