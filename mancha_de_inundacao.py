@@ -185,7 +185,7 @@ def clip_raster(secs, srtm, out_file):
     secs = secs.to_crs(epsg=4326)
     minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
     bbox = box(minx, miny, maxx, maxy)
-    out_image, out_transform = rasterio.mask.mask(srtm, [bbox], crop=True)
+    out_image, out_transform = rasterio.mask.mask(srtm, [bbox], crop=True, nodata=-999)
     out_meta = srtm.meta
     out_meta.update({"driver": "GTiff",
                      "height": out_image.shape[1],
@@ -203,9 +203,12 @@ def get_coordinates(clipado):
             a = clipado.xy(i, j, offset='center')
             ij.append(a)
     b = clipado.read(1).flatten()
-    x, y = [i[0] for i in ij], [j[1] for j in ij]
+    nanfilter = b > 0
+    x, y = np.array([i[0] for i in ij]), np.array([j[1] for j in ij])
     ij = transformacao(y, x, d_to_m=True, new=True)
-    return ij, b, w, h
+    xcoords = np.array(ij[0])
+    ycoords = np.array(ij[1])
+    return xcoords[nanfilter], ycoords[nanfilter], b[nanfilter]
 
 def altura_de_agua_secoes(ds, dp, c, qmax_barr, v):
     ct = [i[40] for i in c]

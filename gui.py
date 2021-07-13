@@ -99,24 +99,24 @@ def calcular():
 
     #arquivo_cropado = asksaveasfile(defaultextension=".srtm")
     #flname = arquivo_cropado.name
-    flname= 'cropado.srtm'
+    flname= 'clipado'
 
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
 
-    coords, z, wi, hi = get_coordinates(clipado)
+    xcoords, ycoords, z = get_coordinates(clipado)
 
-    v_int = rbf_interpolation(x_all, y_all, h_all, coords[0], coords[1])
+    v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
     mancha = np.where(v_int > z, 1, 0)
     #mancha = mancha.reshape(wi, hi)
     
-    #plt.figure(figsize=(8,8))
-    #plt.scatter(coords[0], coords[1], c=mancha)
+    plt.figure(figsize=(8,8))
+    plt.scatter(xcoords, ycoords, c=mancha)
     #cs = plt.contour(coords[0][:wi],coords[1][::wi],mancha.reshape(hi, wi), [0.])
-    #plt.show()
+    plt.show()
 
     kml_flname = asksaveasfilename(defaultextension=".kml")
-    points_to_kml(coords[0], coords[1], mancha, kml_flname)
+    points_to_kml(xcoords, ycoords, mancha, kml_flname)
 
     print('Finalizado!')
 

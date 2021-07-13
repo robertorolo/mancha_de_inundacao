@@ -2,7 +2,7 @@
 
 ## Dependeências
 
-    pip install numpy geopandas rasterio scipy simplekml 
+    pip install numpy geopandas rasterio scipy simplekml matplotlib
   
 ## Passo 1
 
@@ -22,6 +22,8 @@ O botão calcular mostra as seções perpendiculares, o traçado e srtm. Caso o 
 
 ## Passo 3
 
-No passo três o restante dos cálculos é feito. O programa retorna um conjunto de pontos alagados em formato `.kml` que pode ser visualizado no google earth.
+No passo três o restante dos cálculos é feito. O programa mostra um mapa da mancha de inundação e salva um conjunto de pontos alagados em formato `.kml` que pode ser visualizado no google earth.
+
+![alt text](figs/mancha.png)
 
 ![alt text](figs/pts_alagados.png)
