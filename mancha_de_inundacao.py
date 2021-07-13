@@ -128,16 +128,20 @@ def transformacao(x, y, d_to_m, new):#takes a loot of time to run
 
 def cotas_secoes(tracado, srtm):
     cotas = []
+    xs = []
+    ys = []
     for linha in tracado.iloc[2:]['geometry']:
         p, d = pontos_tracado(linha, n=81)
         p = [i.coords[:][0] for i in p]
         x, y = [i[0] for i in p], [j[1] for j in p]
+        xs.append(x)
+        ys.append(y)
         pt = transformacao(x, y, d_to_m=False, new=True)
         pt = [(y, x) for x,y in zip(pt[0], pt[1])]
         cota = list(srtm.sample(pt))
         cota = [k[0] for k in cota]
         cotas.append(cota)
-    return cotas, d
+    return cotas, d, xs, ys
 
 def raio_hidraulico(y, x):
     y, x = np.array(y), np.array(x)
@@ -197,8 +201,35 @@ def get_coordinates(clipado):
     ij = transformacao(y, x, d_to_m=True, new=True)
     return ij, b
 
-def rbf_interpolation(x, y, v, xi, yi):
+def altura_de_agua_secoes(ds, dp, c, qmax_barr, v):
+    ct = [i[40] for i in c]
+    j = (ct[0] - ct[-1])/ds[-1]
+
+    qs = []
+    for i in ds:
+        qs.append(qmax_secao(i, qmax_barr, v))
+
+    areas = []
+    raios = []
+    for cotas in c:
+        a, r, h = raio_hidraulico(cotas, dp)
+        areas.append(a)
+        raios.append(r)
+    alturas = h
+
+    alturas_secoes = []
+    for idx in range(len(areas)):
+        qs_s = []
+        for idx1 in range(len(areas[idx])):
+            q = manning(areas[idx][idx1], raios[idx][idx1], j)
+            qs_s.append(q)
+        a = polyfit(qs_s, alturas[1:], qs[idx]) + ct[idx]
+        alturas_secoes.append(a)
+
+    return alturas_secoes
+
+def rbf_interpolation(x, y, v, xi, yi, epsilon=None):
     x, y, z, d = x, y, np.zeros(len(x)), v
-    rbfi = Rbf(x, y, z, d)  # radial basis function interpolator instance
-    di = rbfi(xi, yi, zi)   # interpolated values
+    rbfi = Rbf(x, y, z, d, epsilon=epsilon)  # radial basis function interpolator instance
+    di = rbfi(xi, yi, np.zeros(len(xi)))   # interpolated values
     return di
