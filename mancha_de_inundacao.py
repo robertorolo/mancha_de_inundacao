@@ -237,6 +237,5 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v):
 def rbf_interpolation(x, y, v, xi, yi, function='linear'):
     x, y, z, d = x, y, np.zeros(len(x)), v
     rbfi = Rbf(x, y, z, d, function=function)
-    #print('Epsilon: ',rbfi.epsilon)
     di = rbfi(xi, yi, np.zeros(len(xi)))
     return di
