@@ -2,8 +2,7 @@ import numpy as np
 import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString, box
 import pyproj
-from pyproj import Proj, transform
-from shapely.ops import transform as tsf
+from pyproj import Proj, Transformer, transform
 import math
 import rasterio.mask
 import rasterio
@@ -111,15 +110,29 @@ def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     tracado = tracado.to_crs(epsg=4326)
     tracado.to_file(nome_do_arquivo)
 
+def transformacao(x, y, d_to_m, new):#takes a loot of time to run
+    if d_to_m:
+        outProj = "epsg:31982"
+        inProj = "epsg:4326"
+    else:
+        inProj = "epsg:31982"
+        outProj = "epsg:4326"
+
+    if new:
+        transformer = Transformer.from_crs(inProj, outProj)
+        np = transformer.transform(x, y)
+    else:
+        np = transform(inProj, outProj, x, y)
+    return np
+
 def cotas_secoes(tracado, srtm):
-    inProj = Proj('epsg:31982')
-    outProj = Proj('epsg:4326')
     cotas = []
     for linha in tracado.iloc[2:]['geometry']:
         p, d = pontos_tracado(linha, n=81)
         p = [i.coords[:][0] for i in p]
-        pt = [(transform(inProj,outProj,i[0],i[1])) for i in p]
-        pt = [(i[1], i[0]) for i in pt]
+        x, y = [i[0] for i in p], [j[1] for j in p]
+        pt = transformacao(x, y, d_to_m=False, new=True)
+        pt = [(y, x) for x,y in zip(pt[0], pt[1])]
         cota = list(srtm.sample(pt))
         cota = [k[0] for k in cota]
         cotas.append(cota)
@@ -164,8 +177,21 @@ def clip_raster(secs, srtm):
     out_image, out_transform = rasterio.mask.mask(srtm, [bbox], crop=True)
     out_meta = srtm.meta
     out_meta.update({"driver": "GTiff",
-                 "height": out_image.shape[1],
-                 "width": out_image.shape[2],
-                 "transform": out_transform})
+                     "height": out_image.shape[1],
+                     "width": out_image.shape[2],
+                     "transform": out_transform})
     with rasterio.open('srtm_cropado', 'w', **out_meta) as dest:
         dest.write(out_image)
+
+def get_coordinates(clipado):
+    w = clipado.width
+    h = clipado.height
+    ij = []
+    for i in range(h):
+        for j in range(w):
+            a = clipado.xy(i, j, offset='center')
+            ij.append(a)
+    b = clipado.read(1).flatten()
+    x, y = [i[0] for i in ij], [j[1] for j in ij]
+    ij = transformacao(y, x, d_to_m=True, new=True)
+    return ij, b
