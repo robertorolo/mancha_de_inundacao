@@ -6,6 +6,7 @@ import math
 import rasterio.mask
 import rasterio
 from scipy.interpolate import Rbf
+import simplekml
 
 def crio(volume):
     volume = volume * 10e-6 # tranformacao para hm
@@ -204,7 +205,7 @@ def get_coordinates(clipado):
     b = clipado.read(1).flatten()
     x, y = [i[0] for i in ij], [j[1] for j in ij]
     ij = transformacao(y, x, d_to_m=True, new=True)
-    return ij, b
+    return ij, b, w, h
 
 def altura_de_agua_secoes(ds, dp, c, qmax_barr, v):
     ct = [i[40] for i in c]
@@ -239,3 +240,25 @@ def rbf_interpolation(x, y, v, xi, yi, function='linear'):
     rbfi = Rbf(x, y, z, d, function=function)
     di = rbfi(xi, yi, np.zeros(len(xi)))
     return di
+
+def points_to_kml(x, y, mancha):
+    f = mancha == 1
+    x = x[f]
+    y = y[f]
+    xy = ij = transformacao(y, x, d_to_m=False, new=True)
+    
+def points_to_kml(x, y, mancha, flname):
+    x = np.array(x)
+    y = np.array(y)
+    f = mancha == 1
+    x = x[f]
+    y = y[f]
+    xy = transformacao(x, y, d_to_m=False, new=True)
+
+    kml = simplekml.Kml()
+    for x, y in zip(xy[0], xy[1]):    
+        pnt = kml.newpoint(description='ponto inundado', coords=[(y, x)])
+        pnt.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/water.png'
+        pnt.style.iconstyle.scale = 0.5
+    
+    kml.save(flname)

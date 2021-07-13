@@ -97,20 +97,30 @@ def calcular():
             x_all.append(xs[idx][idx1])
             y_all.append(ys[idx][idx1])
 
-    arquivo_cropado = asksaveasfile(defaultextension=".srtm")
-    flname = arquivo_cropado.name
+    #arquivo_cropado = asksaveasfile(defaultextension=".srtm")
+    #flname = arquivo_cropado.name
+    flname= 'cropado.srtm'
 
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
 
-    coords, z = get_coordinates(clipado)
+    coords, z, wi, hi = get_coordinates(clipado)
 
     v_int = rbf_interpolation(x_all, y_all, h_all, coords[0], coords[1])
     mancha = np.where(v_int > z, 1, 0)
+    mancha = mancha.reshape(wi, hi)
+    print(mancha.ndim)
     
     plt.figure(figsize=(8,8))
     plt.scatter(coords[0], coords[1], c=mancha)
+    #cs = plt.contour(coords[0][:wi],coords[1][::wi],mancha.reshape(hi, wi), [0.])
     plt.show()
+
+    kml = asksaveasfile(defaultextension=".kml")
+    flname = kml.name
+    points_to_kml(coords[0], coords[1], mancha, flname)
+
+    print('Finalizado!')
 
 def importar_secoes():
     global s
