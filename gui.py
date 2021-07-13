@@ -108,17 +108,15 @@ def calcular():
 
     v_int = rbf_interpolation(x_all, y_all, h_all, coords[0], coords[1])
     mancha = np.where(v_int > z, 1, 0)
-    mancha = mancha.reshape(wi, hi)
-    print(mancha.ndim)
+    #mancha = mancha.reshape(wi, hi)
     
-    plt.figure(figsize=(8,8))
-    plt.scatter(coords[0], coords[1], c=mancha)
+    #plt.figure(figsize=(8,8))
+    #plt.scatter(coords[0], coords[1], c=mancha)
     #cs = plt.contour(coords[0][:wi],coords[1][::wi],mancha.reshape(hi, wi), [0.])
-    plt.show()
+    #plt.show()
 
-    kml = asksaveasfile(defaultextension=".kml")
-    flname = kml.name
-    points_to_kml(coords[0], coords[1], mancha, flname)
+    kml_flname = asksaveasfilename(defaultextension=".kml")
+    points_to_kml(coords[0], coords[1], mancha, kml_flname)
 
     print('Finalizado!')
 
