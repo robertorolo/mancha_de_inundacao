@@ -1,8 +1,7 @@
 import numpy as np
 import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString, box
-import pyproj
-from pyproj import Proj, Transformer, transform
+from pyproj import Transformer, transform
 import math
 import rasterio.mask
 import rasterio
@@ -76,7 +75,7 @@ def split_linha(tracado):
 
     return line_split
 
-def perpendicular(linha, ponto, comprimento=4000):
+def perpendicular(linha, ponto, comprimento):
     rp1, rp2 = linha.coords[:][0], linha.coords[:][1]
     slope=(rp2[1]-rp1[1])/(rp2[0]-rp1[0])
     (rp2[1]-rp1[1])/(rp2[0]-rp1[0])
@@ -100,7 +99,7 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
     for i, point in enumerate(p):
         for line in l:
             if line.distance(point) < tol:
-                perp = perpendicular(line, point)
+                perp = perpendicular(line, point, comprimento)
                 data = ['seçao {}'.format(i), d[i], perp]
                 tracado.loc[len(tracado)] = data
 
@@ -111,7 +110,7 @@ def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     tracado = tracado.to_crs(epsg=4326)
     tracado.to_file(nome_do_arquivo)
 
-def transformacao(x, y, d_to_m, new):#takes a loot of time to run
+def transformacao(x, y, d_to_m, new):
     if d_to_m:
         outProj = "epsg:31982"
         inProj = "epsg:4326"
@@ -153,6 +152,12 @@ def raio_hidraulico(y, x):
         ytt = yt - (max(yt) - h)
         f = ytt > 0
         ytt, xt = ytt[f], x[f]
+        #adding values
+        ytt = np.insert(ytt,0,0.)
+        ytt = np.append(ytt, 0)
+        xt = np.insert(xt,0,xt[0])
+        xt = np.append(xt, xt[-1])
+
         area = np.trapz(y=ytt, x=xt)
         distances = []
         for i in range(len(ytt)):
@@ -174,7 +179,7 @@ def polyfit(x, y, x_i):
     ffit = poly.polyval(x_i, coefs)
     return ffit
 
-def clip_raster(secs, srtm):
+def clip_raster(secs, srtm, out_file):
     secs.crs = 'EPSG:31982'
     secs = secs.to_crs(epsg=4326)
     minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
@@ -185,7 +190,7 @@ def clip_raster(secs, srtm):
                      "height": out_image.shape[1],
                      "width": out_image.shape[2],
                      "transform": out_transform})
-    with rasterio.open('srtm_cropado', 'w', **out_meta) as dest:
+    with rasterio.open(out_file, 'w', **out_meta) as dest:
         dest.write(out_image)
 
 def get_coordinates(clipado):
@@ -223,13 +228,15 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v):
         for idx1 in range(len(areas[idx])):
             q = manning(areas[idx][idx1], raios[idx][idx1], j)
             qs_s.append(q)
-        a = polyfit(qs_s, alturas[1:], qs[idx]) + ct[idx]
+        a = polyfit(qs_s, alturas[1:], qs[idx])
+        a = a + ct[idx]
         alturas_secoes.append(a)
 
     return alturas_secoes
 
 def rbf_interpolation(x, y, v, xi, yi, epsilon=None):
     x, y, z, d = x, y, np.zeros(len(x)), v
-    rbfi = Rbf(x, y, z, d, epsilon=epsilon)  # radial basis function interpolator instance
-    di = rbfi(xi, yi, np.zeros(len(xi)))   # interpolated values
+    rbfi = Rbf(x, y, z, d, epsilon=epsilon)
+    print('Epsilon: ',rbfi.epsilon)
+    di = rbfi(xi, yi, np.zeros(len(xi)))
     return di
