@@ -64,6 +64,7 @@ def calcular_perpendiculares():
     s.crs = 'EPSG:31982'
     st = s.to_crs(epsg=4326)
 
+    print('Feche a janela do mapa para contnuar.')
     fig, ax = plt.subplots(figsize=(8,8))
     
     show(srtm, ax=ax)
@@ -74,6 +75,7 @@ def calcular_perpendiculares():
     plt.show()
  
 def calcular():
+    print('Cálculo hídrico iniciado...')
 
     qmax_barr = qmax_barragem(h, v)
     cotas(ponto_informado, srtm, h)
@@ -82,11 +84,7 @@ def calcular():
     ct = [i[40] for i in c]
     j = (ct[0] - ct[-1])/ds[-1]
 
-    qs = []
-    for i in ds:
-        qs.append(qmax_secao(i, qmax_barr, v))
-
-    alturas = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
+    alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
 
     x_all = []
     y_all = []
@@ -110,6 +108,7 @@ def calcular():
     mancha = np.where(v_int > z, 1, 0)
     #mancha = mancha.reshape(wi, hi)
     
+    print('Feche a janela do mapa para continuar.')
     plt.figure(figsize=(8,8))
     plt.scatter(xcoords, ycoords, c=mancha)
     #cs = plt.contour(coords[0][:wi],coords[1][::wi],mancha.reshape(hi, wi), [0.])
@@ -119,6 +118,9 @@ def calcular():
     points_to_kml(xcoords, ycoords, mancha, kml_flname)
 
     print('Finalizado!')
+    
+    for idx in range(len(qs)):
+        print('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
 
 def importar_secoes():
     global s

@@ -214,7 +214,7 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
     ct = [i[40] for i in c]
     j = (ct[0] - ct[-1])/ds[-1]
     
-    #calculando altura maxima simulada
+    #alt max simulada
     fc = 1
     alt_max = h_barr/fc
     
@@ -237,13 +237,9 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
             q = manning(areas[idx][idx1], raios[idx][idx1], j)
             qs_s.append(q)
         a = polyfit(qs_s, alturas[1:], qs[idx])
-        print(a)
         a = a + ct[idx]
         alturas_secoes.append(a)
-    print(qs)
-    print(ds)
-
-    return alturas_secoes
+    return alturas_secoes, qs
 
 def rbf_interpolation(x, y, v, xi, yi, function='linear'):
     x, y, z, d = x, y, np.zeros(len(x)), v
