@@ -86,7 +86,7 @@ def calcular():
     for i in ds:
         qs.append(qmax_secao(i, qmax_barr, v))
 
-    alturas = altura_de_agua_secoes(ds, dp, c, qmax_barr, v)
+    alturas = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
 
     x_all = []
     y_all = []
