@@ -39,3 +39,8 @@ O programa mostra um mapa da mancha de inundação para conferência e salva um 
 ![alt text](figs/mancha.PNG)
 
 ![alt text](figs/pts_alagados.PNG)
+
+A janela do terminal mostra um sumário dos resultados.
+
+![alt text](figs/terminal.png)
+

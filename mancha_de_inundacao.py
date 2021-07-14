@@ -27,9 +27,10 @@ def qmax_barragem(altura, volume):
 
 def qmax_secao(x, q_max_barr, volume):
     volume = volume * 10e-6
-    #x = x * 10e-3 m para km
+    if x == 0:
+        return q_max_barr
     if volume > 6.2:
-        return q_max_barr * 10 ** (-0.01243*x)
+        return q_max_barr * 10 ** (-0.02/1609*x)
     else:
         a = 0.002 * np.log(volume) + 0.9626
         b = -0.20047 * (volume + 25000) ** -0.5979
