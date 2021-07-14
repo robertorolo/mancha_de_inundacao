@@ -145,7 +145,7 @@ def cotas_secoes(tracado, srtm):
 
 def raio_hidraulico(y, x):
     y, x = np.array(y), np.array(x)
-    yt = 1 - y + max(y)
+    yt = -y + max(y)
     hs = np.linspace(0, max(yt), 11)
     areas = []
     radius = []
@@ -249,7 +249,7 @@ def points_to_kml(x, y, mancha):
     x = x[f]
     y = y[f]
     xy = ij = transformacao(y, x, d_to_m=False, new=True)
-    
+
 def points_to_kml(x, y, mancha, flname):
     x = np.array(x)
     y = np.array(y)
@@ -259,9 +259,9 @@ def points_to_kml(x, y, mancha, flname):
     xy = transformacao(x, y, d_to_m=False, new=True)
 
     kml = simplekml.Kml()
-    for x, y in zip(xy[0], xy[1]):    
+    for x, y in zip(xy[0], xy[1]):
         pnt = kml.newpoint(description='ponto inundado', coords=[(y, x)])
         pnt.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/water.png'
         pnt.style.iconstyle.scale = 0.5
-    
+
     kml.save(flname)
