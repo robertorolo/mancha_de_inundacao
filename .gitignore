@@ -1,2 +1,3 @@
 *.ipynb
 /arquivos_para_testes
+/__pycache__
