@@ -1,3 +1,8 @@
+"""mancha_de_inundacao.py: modulos com as funcoes necessarias para o programa mancha_de_inundacao."""
+
+__author__ = "Roberto Mentzingen Rolo"
+
+#importando pacotes
 import numpy as np
 import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString, box
@@ -9,8 +14,8 @@ from scipy.interpolate import Rbf
 import simplekml
 
 def crio(volume):
+    #calcula o comprimento do rio a ser modelado a partir da barragem
     volume = volume * 10e-6 # tranformacao para hm
-    # Calcula o comprimento do rio a ser modelado (sobre o rio suavizado)
     crio = 0.0000000887*float(volume)**3 - 0.00026*float(volume)**2 + 0.265*float(volume) + 6.74
     if crio < 5.0:
         crio = 5.0
@@ -21,11 +26,14 @@ def crio(volume):
     return crio
 
 def qmax_barragem(altura, volume):
+    #calcula a vazao maxima na barragem
     mmc = 0.0039 * volume ** 0.8122
     froe = 0.607 * (volume ** 0.295 * altura ** 1.24)
+    
     return max(mmc, froe)
 
 def qmax_secao(x, q_max_barr, volume):
+    #calcula a vazao maxima em cada secao
     volume = volume * 10e-6
     if x == 0:
         return q_max_barr
@@ -37,20 +45,22 @@ def qmax_secao(x, q_max_barr, volume):
         return q_max_barr * a * np.exp(b*x)
 
 def pontos_tracado(linha, n=21):
+    #definne n=21 pontos equidistantes no tracado do rio informado
     distances = np.linspace(0, linha.length, n)
     points = [linha.interpolate(distance) for distance in distances]
-
+    
     return points, distances
 
 def cotas(ponto_informado, srtm, altura):
+    #calcula a cota de um ponto a partir do srtm
     cota_tal = list(srtm.sample([(ponto_informado.x, ponto_informado.y)]))
     cota_tal = cota_tal[0][0]
-
     cota_cor = cota_tal + altura
-
+    
     return cota_tal, cota_cor
 
 def simplificar_tracado(tracado, n):
+    #simplifica o tracado do rio a partir de segmentos de retas
     tracado = tracado.to_crs(epsg=31982)
 
     distances = np.linspace(0, tracado.length, n)
@@ -62,10 +72,11 @@ def simplificar_tracado(tracado, n):
     ls = LineString([Point(i, j) for i, j in zip(x, y)])
     data = ['tracado do rio simplificado', '', ls]
     tracado.loc[len(tracado)] = data
-
+    
     return tracado
 
 def split_linha(tracado):
+    #segmenta o tracado simplificado. necessario para o tracado das perpendiculares
     line_split = []
     coords = tracado.iloc[1]['geometry'].coords[:]
     for i in range(len(coords)):
@@ -78,6 +89,7 @@ def split_linha(tracado):
     return line_split
 
 def perpendicular(linha, ponto, comprimento):
+    #traca uma perpendicular a uma determinada reta em um determinado ponto
     rp1, rp2 = linha.coords[:][0], linha.coords[:][1]
     slope=(rp2[1]-rp1[1])/(rp2[0]-rp1[0])
     (rp2[1]-rp1[1])/(rp2[0]-rp1[0])
@@ -95,6 +107,7 @@ def perpendicular(linha, ponto, comprimento):
     return perp
 
 def secoes_perpendiculares(tracado, n=21, comprimento=4000):
+    #traca n=21 secoes perpendiculares de comprimento=400 metros equidistantes ao longo do tracado simplificado
     p, d = pontos_tracado(tracado.iloc[1]['geometry'], n)
     l = split_linha(tracado)
     tol = 1e-8
@@ -108,11 +121,13 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
     return tracado, d
 
 def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
+    #exporta o tracado como shp file
     tracado.crs = 'EPSG:31982'
     tracado = tracado.to_crs(epsg=4326)
     tracado.to_file(nome_do_arquivo)
 
 def transformacao(x, y, d_to_m, new):
+    #tranforma o sistema de coordenadas de um ponto de graus para metros
     if d_to_m:
         outProj = "epsg:31982"
         inProj = "epsg:4326"
@@ -128,6 +143,7 @@ def transformacao(x, y, d_to_m, new):
     return np
 
 def cotas_secoes(tracado, srtm):
+    #calcula a altimetria das secoes a partir do srtm
     cotas = []
     xs = []
     ys = []
@@ -142,25 +158,31 @@ def cotas_secoes(tracado, srtm):
         cota = list(srtm.sample(pt))
         cota = [k[0] for k in cota]
         cotas.append(cota)
+    
     return cotas, d, xs, ys
 
 def raio_hidraulico(y, x, h_max):
+    #calcula a area e o raio hidraulico de cada secao
     y, x = np.array(y), np.array(x)
     yt = -1*y + max(y)
-    hs = np.linspace(0, h_max, 11)
+    hs = np.linspace(0, h_max, 11) #11 alturas entre 0 e a altura maxima
     areas = []
     radius = []
-    for h in hs[1:]:
+    for h in hs[1:]: #para dez alturas entre um minumo e a altura maxima
         ytt = yt - (max(yt) - h)
         f = ytt > 0
         ytt, xt = ytt[f], x[f]
-        #adding values
+        
+        #adiciona uma reta vertical que intercepta o eixo y=0 no primeiro e ultimos pontos
         ytt = np.insert(ytt,0,0.)
         ytt = np.append(ytt, 0)
         xt = np.insert(xt,0,xt[0])
         xt = np.append(xt, xt[-1])
 
+        #calcula a area pelo metodo dos trapezios
         area = np.trapz(y=ytt, x=xt)
+        
+        #calcula o perimetro molhado
         distances = []
         for i in range(len(ytt)):
             if i < len(ytt) - 1:
@@ -169,19 +191,25 @@ def raio_hidraulico(y, x, h_max):
         perimeter = np.sum(distances)
         areas.append(area)
         radius.append(area/perimeter)
+    
     return areas, radius, hs
 
 def manning(a, r, j, k=15):
+    #equacao de manning
     a, r = np.array(a), np.array(r)
     q = k*a*r**(2/3)*j**(1/2)
+    
     return q
 
 def polyfit(x, y, x_i):
+    #ajusta uma polinomial de terceiro grau
     coefs = poly.polyfit(x, y, 3)
     ffit = poly.polyval(x_i, coefs)
+    
     return ffit
 
 def clip_raster(secs, srtm, out_file):
+    #corta o srtm a partir do tracado e das secoes
     secs.crs = 'EPSG:31982'
     secs = secs.to_crs(epsg=4326)
     minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
@@ -196,6 +224,7 @@ def clip_raster(secs, srtm, out_file):
         dest.write(out_image)
 
 def get_coordinates(clipado):
+    #retorna as coordenadas e a cota do srtm cortado
     w = clipado.width
     h = clipado.height
     ij = []
@@ -209,14 +238,16 @@ def get_coordinates(clipado):
     ij = transformacao(y, x, d_to_m=True, new=True)
     xcoords = np.array(ij[0])
     ycoords = np.array(ij[1])
+    
     return xcoords[nanfilter], ycoords[nanfilter], b[nanfilter]
 
 def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
+    #calcula a altura de agua em cada secao
     ct = [i[40] for i in c]
     j = (ct[0] - ct[-1])/ds[-1]
     
-    #alt max simulada
-    fc = 1
+    #altura maxima simulada
+    fc = 1 #fator de correcao (1 - 6) foi deifinido como 1 para todas as secoes para fins de simplificacao
     alt_max = h_barr/fc
     
     qs = []
@@ -240,21 +271,19 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
         a = polyfit(qs_s, alturas[1:], qs[idx])
         a = a + ct[idx]
         alturas_secoes.append(a)
+    
     return alturas_secoes, qs
 
 def rbf_interpolation(x, y, v, xi, yi, function='linear'):
+    #interpola a cota das secoes a partir de uma funcao linear
     x, y, z, d = x, y, np.zeros(len(x)), v
     rbfi = Rbf(x, y, z, d, function=function)
     di = rbfi(xi, yi, np.zeros(len(xi)))
+    
     return di
-
-def points_to_kml(x, y, mancha):
-    f = mancha == 1
-    x = x[f]
-    y = y[f]
-    xy = ij = transformacao(y, x, d_to_m=False, new=True)
     
 def points_to_kml(x, y, mancha, flname):
+    #salva o conjunto de pontos em formato kml para visualizacao no google earth
     x = np.array(x)
     y = np.array(y)
     f = mancha == 1

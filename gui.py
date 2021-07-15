@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""gui.py: GUI do programa mancha_de_inundacao."""
+
+__author__ = "Roberto Mentzingen Rolo"
+
 #importando pacotes 
 from tkinter import Tk, ttk, Label, Button, Entry, StringVar
 from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
@@ -48,7 +54,6 @@ def carregar_srtm():
     btn_srtm["text"] = "SRTM carregado"
 
 def calcular_perpendiculares():
-
     n = entry_suavi.get()
     n = int(n.replace(',','.'))
 
@@ -95,9 +100,7 @@ def calcular():
             x_all.append(xs[idx][idx1])
             y_all.append(ys[idx][idx1])
 
-    #arquivo_cropado = asksaveasfile(defaultextension=".srtm")
-    #flname = arquivo_cropado.name
-    flname= 'clipado'
+    flname= 'srtm_cortado' #salva o srtm cortado. pode ser necessario apagar manualmente um arquivo salvo anteriormente
 
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
@@ -106,12 +109,10 @@ def calcular():
 
     v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
     mancha = np.where(v_int > z, 1, 0)
-    #mancha = mancha.reshape(wi, hi)
     
     print('Feche a janela do mapa para continuar.')
     plt.figure(figsize=(8,8))
     plt.scatter(xcoords, ycoords, c=mancha)
-    #cs = plt.contour(coords[0][:wi],coords[1][::wi],mancha.reshape(hi, wi), [0.])
     plt.show()
 
     kml_flname = asksaveasfilename(defaultextension=".kml")
