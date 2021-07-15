@@ -1,4 +1,4 @@
-"""mancha_de_inundacao.py: modulos com as funcoes necessarias para o programa mancha_de_inundacao."""
+"""mancha_de_inundacao.py: modulo com as funcoes necessarias para o programa mancha_de_inundacao."""
 
 __author__ = "Roberto Mentzingen Rolo"
 
@@ -127,7 +127,7 @@ def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     tracado.to_file(nome_do_arquivo)
 
 def transformacao(x, y, d_to_m, new):
-    #tranforma o sistema de coordenadas de um ponto de graus para metros
+    #tranforma o sistema de coordenadas de um ponto de graus para metros ou vice versa
     if d_to_m:
         outProj = "epsg:31982"
         inProj = "epsg:4326"
