@@ -111,8 +111,11 @@ def calcular():
     mancha = np.where(v_int > z, 1, 0)
     
     print('Feche a janela do mapa para continuar.')
-    plt.figure(figsize=(8,8))
-    plt.scatter(xcoords, ycoords, c=mancha)
+    fig, ax = plt.subplots(figsize=(8,8))
+    ax.scatter(xcoords, ycoords, c=mancha)
+    s.crs = 'EPSG:4326'
+    st = s.to_crs(epsg=31982)
+    s.plot(ax=ax, color='red')
     plt.show()
 
     kml_flname = asksaveasfilename(defaultextension=".kml")
