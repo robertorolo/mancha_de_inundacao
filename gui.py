@@ -112,7 +112,7 @@ def calcular():
     
     print('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
-    ax.scatter(xcoords, ycoords, c=mancha)
+    ax.scatter(xcoords, ycoords, c=mancha, s=2)
     s.crs = 'EPSG:4326'
     st = s.to_crs(epsg=31982)
     s.plot(ax=ax, color='red')
