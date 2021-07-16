@@ -164,7 +164,7 @@ def cotas_secoes(tracado, srtm):
 def raio_hidraulico(y, x, h_max):
     #calcula a area e o raio hidraulico de cada secao
     y, x = np.array(y), np.array(x)
-    yt = -1*y + max(y)
+    yt = -1 * y + max(y)
     hs = np.linspace(0, h_max, 11) #11 alturas entre 0 e a altura maxima
     areas = []
     radius = []
