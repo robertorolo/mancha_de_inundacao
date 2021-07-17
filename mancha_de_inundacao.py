@@ -29,7 +29,7 @@ def qmax_barragem(altura, volume):
     #calcula a vazao maxima na barragem
     mmc = 0.0039 * volume ** 0.8122
     froe = 0.607 * (volume ** 0.295 * altura ** 1.24)
-    
+
     return max(mmc, froe)
 
 def qmax_secao(x, q_max_barr, volume):
@@ -45,10 +45,10 @@ def qmax_secao(x, q_max_barr, volume):
         return q_max_barr * a * np.exp(b*x)
 
 def pontos_tracado(linha, n=21):
-    #definne n=21 pontos equidistantes no tracado do rio informado
+    #definne n=21 pontos equidistantes na linha informada
     distances = np.linspace(0, linha.length, n)
     points = [linha.interpolate(distance) for distance in distances]
-    
+
     return points, distances
 
 def cotas(ponto_informado, srtm, altura):
@@ -56,7 +56,7 @@ def cotas(ponto_informado, srtm, altura):
     cota_tal = list(srtm.sample([(ponto_informado.x, ponto_informado.y)]))
     cota_tal = cota_tal[0][0]
     cota_cor = cota_tal + altura
-    
+
     return cota_tal, cota_cor
 
 def simplificar_tracado(tracado, n):
@@ -72,7 +72,7 @@ def simplificar_tracado(tracado, n):
     ls = LineString([Point(i, j) for i, j in zip(x, y)])
     data = ['tracado do rio simplificado', '', ls]
     tracado.loc[len(tracado)] = data
-    
+
     return tracado
 
 def split_linha(tracado):
@@ -158,7 +158,7 @@ def cotas_secoes(tracado, srtm):
         cota = list(srtm.sample(pt))
         cota = [k[0] for k in cota]
         cotas.append(cota)
-    
+
     return cotas, d, xs, ys
 
 def raio_hidraulico(y, x, h_max):
@@ -172,7 +172,7 @@ def raio_hidraulico(y, x, h_max):
         ytt = yt - (max(yt) - h)
         f = ytt > 0
         ytt, xt = ytt[f], x[f]
-        
+
         #adiciona uma reta vertical que intercepta o eixo y=0 no primeiro e ultimos pontos
         ytt = np.insert(ytt,0,0.)
         ytt = np.append(ytt, 0)
@@ -181,7 +181,7 @@ def raio_hidraulico(y, x, h_max):
 
         #calcula a area pelo metodo dos trapezios
         area = np.trapz(y=ytt, x=xt)
-        
+
         #calcula o perimetro molhado
         distances = []
         for i in range(len(ytt)):
@@ -191,21 +191,21 @@ def raio_hidraulico(y, x, h_max):
         perimeter = np.sum(distances)
         areas.append(area)
         radius.append(area/perimeter)
-    
+
     return areas, radius, hs
 
 def manning(a, r, j, k=15):
     #equacao de manning
     a, r = np.array(a), np.array(r)
     q = k*a*r**(2/3)*j**(1/2)
-    
+
     return q
 
 def polyfit(x, y, x_i):
     #ajusta uma polinomial de terceiro grau
     coefs = poly.polyfit(x, y, 3)
     ffit = poly.polyval(x_i, coefs)
-    
+
     return ffit
 
 def clip_raster(secs, srtm, out_file):
@@ -238,18 +238,18 @@ def get_coordinates(clipado):
     ij = transformacao(y, x, d_to_m=True, new=True)
     xcoords = np.array(ij[0])
     ycoords = np.array(ij[1])
-    
+
     return xcoords[nanfilter], ycoords[nanfilter], b[nanfilter]
 
 def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
     #calcula a altura de agua em cada secao
     ct = [i[40] for i in c]
     j = (ct[0] - ct[-1])/ds[-1]
-    
+
     #altura maxima simulada
     fc = 1 #fator de correcao (1 - 6) foi deifinido como 1 para todas as secoes para fins de simplificacao
     alt_max = h_barr/fc
-    
+
     qs = []
     for i in ds:
         qs.append(qmax_secao(i, qmax_barr, v))
@@ -271,7 +271,7 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
         a = polyfit(qs_s, alturas[1:], qs[idx])
         a = a + ct[idx]
         alturas_secoes.append(a)
-    
+
     return alturas_secoes, qs
 
 def rbf_interpolation(x, y, v, xi, yi, function='linear'):
@@ -279,9 +279,9 @@ def rbf_interpolation(x, y, v, xi, yi, function='linear'):
     x, y, z, d = x, y, np.zeros(len(x)), v
     rbfi = Rbf(x, y, z, d, function=function)
     di = rbfi(xi, yi, np.zeros(len(xi)))
-    
+
     return di
-    
+
 def points_to_kml(x, y, mancha, flname):
     #salva o conjunto de pontos em formato kml para visualizacao no google earth
     x = np.array(x)
@@ -292,9 +292,9 @@ def points_to_kml(x, y, mancha, flname):
     xy = transformacao(x, y, d_to_m=False, new=True)
 
     kml = simplekml.Kml()
-    for x, y in zip(xy[0], xy[1]):    
+    for x, y in zip(xy[0], xy[1]):
         pnt = kml.newpoint(description='ponto inundado', coords=[(y, x)])
         pnt.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/water.png'
         pnt.style.iconstyle.scale = 0.5
-    
+
     kml.save(flname)
