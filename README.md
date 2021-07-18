@@ -40,7 +40,7 @@ No passo três os cálculos hidráulicos são feitos sem a interação do usuár
 
 O programa mostra um mapa da mancha de inundação para conferência e salva um conjunto de pontos alagados em formato `.kml` que pode ser visualizado no Google Earth.
 
-![alt text](figs/mancha1.PNG)
+![alt text](figs/mancha.PNG)
 
 ![alt text](figs/pts_alagados.PNG)
 

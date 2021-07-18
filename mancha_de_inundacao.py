@@ -161,24 +161,50 @@ def cotas_secoes(tracado, srtm):
     
     return cotas, d, xs, ys
 
+def line_coef(p1, p2):
+    #calcula os coeficientes a, b de uma reta dado dois pontos
+    x1, y1 = p1[0], p1[1]
+    x2, y2 = p2[0], p2[1]
+    a = (y2 - y1) / (x2 - x1)
+    b = y1 - a * x1     
+    
+    return a, b
+
+def increase_resolution(x, y, n=100):
+    #aumenta a resolução do perfil da secao
+    x, y, = np.array(x), np.array(y)
+    
+    ixs = []
+    iys = []
+
+    for i in range(len(x)):
+        if i < len(x)-1:
+            ix = np.linspace(x[i], x[i+1], n)
+            p1, p2 = (x[i], y[i]), (x[i+1], y[i+1])
+            a, b = line_coef(p1, p2)
+            iy = a*ix+b
+
+            ixs = ixs + list(ix)
+            iys = iys + list(iy)
+
+    ixs, iys = np.array(ixs), np.array(iys)
+
+    return ixs, iys
+
 def raio_hidraulico(y, x, h_max):
     #calcula a area e o raio hidraulico de cada secao
-    y, x = np.array(y), np.array(x)
+    x, y = increase_resolution(x, y)
+    
     yt = -1 * y + max(y)
     hs = np.linspace(0, h_max, 11) #11 alturas entre 0 e a altura maxima
     areas = []
     radius = []
+    
     for h in hs[1:]: #para dez alturas entre um minumo e a altura maxima
         ytt = yt - (max(yt) - h)
         f = ytt > 0
         ytt, xt = ytt[f], x[f]
         
-        #adiciona uma reta vertical que intercepta o eixo y=0 no primeiro e ultimos pontos
-        ytt = np.insert(ytt,0,0.)
-        ytt = np.append(ytt, 0)
-        xt = np.insert(xt,0,xt[0])
-        xt = np.append(xt, xt[-1])
-
         #calcula a area pelo metodo dos trapezios
         area = np.trapz(y=ytt, x=xt)
         
@@ -268,7 +294,9 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
         for idx1 in range(len(areas[idx])):
             q = manning(areas[idx][idx1], raios[idx][idx1], j)
             qs_s.append(q)
-        a = polyfit(qs_s, alturas[1:], qs[idx])
+        
+        qs_s = np.insert(qs_s,0,0)
+        a = polyfit(qs_s, alturas, qs[idx])
         a = a + ct[idx]
         alturas_secoes.append(a)
     
