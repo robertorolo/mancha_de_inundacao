@@ -14,6 +14,9 @@ import rasterio.mask
 import matplotlib.pyplot as plt
 import fiona
 from mancha_de_inundacao import *
+import ctypes
+ 
+ctypes.windll.shcore.SetProcessDpiAwareness(1) #texto nitido em monitores de alta resolucao
 
 fiona.supported_drivers['KML'] = 'rw'
 
