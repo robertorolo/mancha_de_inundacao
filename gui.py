@@ -90,7 +90,6 @@ def calcular():
 
     c, dp, xs, ys = cotas_secoes(s, srtm)
     ct = [i[40] for i in c]
-    j = (ct[0] - ct[-1])/ds[-1]
 
     alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
 
