@@ -18,7 +18,7 @@ Implementação em python da metodologia simplificada para definição da mancha
 
 O passo um consiste em informar parâmtros básicos do barramento. O botão calcular retorna o comprimento do trecho do rio que deve ser traçado a partir do barramento. O traçado pode ser feito no Google Earth ou algum outro software GIS.
 
-![alt text](figs/p1.png)
+![alt text](figs/4p1.png)
 
 ## Passo 2
 
@@ -26,7 +26,7 @@ No passo dois o traçado do rio deve ser carregado em formato `.kml`. Um SRTM, q
 
 O número de retas para simplificação do traçado do rio e o comprimento das seções perpendiculares devem ser informadas.
 
-![alt text](figs/p2.png)
+![alt text](figs/4p2.png)
 
 O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso o usuário não esteja satisfeito com o resultado é possível exportar um arquivo `.shp`. As seções podem ser giradas em torno do traçado para evitar cruzamntos. O novo arquivo `.shp` deve ser anexado e o cálculo feito novamente.
 
@@ -36,7 +36,7 @@ O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso 
 
 No passo três os cálculos hidráulicos são feitos sem a interação do usuário. Algumas simplificações e adaptações em relação à metodologia originalmente proposta foram necessárias para agilizar e tornar o fluxo de trabalho mais eficiente.
 
-![alt text](figs/p3.png)
+![alt text](figs/4p3.png)
 
 O programa mostra um mapa da mancha de inundação para conferência e salva um conjunto de pontos alagados em formato `.kml` que pode ser visualizado no Google Earth.
 
