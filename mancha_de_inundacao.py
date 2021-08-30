@@ -26,7 +26,7 @@ def rotate_secs(sec_df, maxiter=2000, drange=[-0.5,0.5]):
     ndf = ndf.reset_index(drop=True)
     inter = True
     
-    while inter:
+    while inter or maxiter > 0:
         maxiter = maxiter -1
         inter = False
 
