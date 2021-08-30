@@ -20,7 +20,7 @@ def rotate_l(l1, drange):
     nl = affinity.rotate(l1, g, 'center')
     return nl
 
-def rotate_secs(sec_df, maxiter=2000, drange=[-0.5,0.5]):
+def rotate_secs(sec_df, maxiter=5000, drange=[-5,5]):
     #rotaciona as secoes ate que nao haja mais intersecoes 
     ndf = secs.iloc[2:].copy(deep=False)
     ndf = ndf.reset_index(drop=True)
