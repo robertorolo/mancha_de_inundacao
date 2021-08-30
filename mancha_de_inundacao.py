@@ -6,12 +6,55 @@ __author__ = "Roberto Mentzingen Rolo"
 import numpy as np
 import numpy.polynomial.polynomial as poly
 from shapely.geometry import Point, LineString, box
+from shapely import affinity
 from pyproj import Transformer, transform
 import math
 import rasterio.mask
 import rasterio
 from scipy.interpolate import Rbf
 import simplekml
+
+def rotate_l(l1, drange):
+    #gira um linha em seu centro um valor aleatorio em graus entre um range definido
+    g = np.random.uniform(drange[0],drange[1])
+    nl = affinity.rotate(l1, g, 'center')
+    return nl
+
+def rotate_secs(sec_df, maxiter=2000, drange=[-0.5,0.5]):
+    #rotaciona as secoes ate que nao haja mais intersecoes 
+    ndf = secs.iloc[2:].copy(deep=False)
+    ndf = ndf.reset_index(drop=True)
+    inter = True
+    
+    while inter:
+        maxiter = maxiter -1
+        inter = False
+
+        for idx in range(ndf.shape[0]-1):
+            if idx == 0:
+                l1 = ndf.iloc[idx].geometry
+                l2 = ndf.iloc[idx+1].geometry
+                if l1.intersects(l2):
+                    nl = rotate_l(l1, drange)
+                    ndf.iloc[idx].geometry = nl
+                    inter=True
+            elif idx == ndf.shape[0]-1:
+                l1 = ndf.iloc[idx].geometry
+                l2 = ndf.iloc[idx-1].geometry
+                if l1.intersects(l2):
+                    nl = rotate_l(l1, drange)
+                    ndf.geometry.iloc[idx] = nl
+                    inter=True
+            else:
+                for i in [-1,1]:
+                        l1 = ndf.iloc[idx].geometry
+                        l2 = ndf.iloc[idx+i].geometry
+                        if l1.intersects(l2):
+                            nl = rotate_l(l1, drange)
+                            ndf.geometry.iloc[idx] = nl
+                            inter=True
+                    
+    return ndf
 
 def crio(volume):
     #calcula o comprimento do rio a ser modelado a partir da barragem
