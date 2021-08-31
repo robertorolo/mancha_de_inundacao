@@ -13,6 +13,8 @@ import rasterio.mask
 import rasterio
 from scipy.interpolate import Rbf
 import simplekml
+import pandas as pd
+import geopandas
 
 def rotate_l(l1, drange):
     #gira um linha em seu centro um valor aleatorio em graus entre um range definido
@@ -20,42 +22,43 @@ def rotate_l(l1, drange):
     nl = affinity.rotate(l1, g, 'center')
     return nl
 
-def rotate_secs(sec_df, maxiter=5000, drange=[-5,5]):
-    #rotaciona as secoes ate que nao haja mais intersecoes 
-    ndf = secs.iloc[2:].copy(deep=False)
+def check_if_intercepts(l1, l2):
+    return l1.intersects(l2)
+
+def rotate_secs(sec_df, maxiter=5000, drange=[-10,10]):
+    #tenta desiterceptar as seções
+    print('Insto pode demorar um pouco')
+    ndf = sec_df.iloc[2:].copy(deep=False)
     ndf = ndf.reset_index(drop=True)
     inter = True
     
-    while inter and maxiter > 0:
-        maxiter = maxiter -1
-        inter = False
+    for i in range(maxiter):
 
         for idx in range(ndf.shape[0]-1):
             if idx == 0:
                 l1 = ndf.iloc[idx].geometry
                 l2 = ndf.iloc[idx+1].geometry
-                if l1.intersects(l2):
-                    nl = rotate_l(l1, drange)
-                    ndf.iloc[idx].geometry = nl
-                    inter=True
+                while check_if_intercepts(l1, l2):
+                    l1 = rotate_l(l1, drange)
+                ndf.iloc[idx].geometry = l1
+
             elif idx == ndf.shape[0]-1:
                 l1 = ndf.iloc[idx].geometry
                 l2 = ndf.iloc[idx-1].geometry
-                if l1.intersects(l2):
-                    nl = rotate_l(l1, drange)
-                    ndf.geometry.iloc[idx] = nl
-                    inter=True
+                while check_if_intercepts(l1, l2):
+                    l1 = rotate_l(l1, drange)
+                ndf.geometry.iloc[idx] = l1
+
             else:
                 for i in [-1,1]:
                         l1 = ndf.iloc[idx].geometry
                         l2 = ndf.iloc[idx+i].geometry
-                        if l1.intersects(l2):
-                            nl = rotate_l(l1, drange)
-                            ndf.geometry.iloc[idx] = nl
-                            inter=True
-                    
-    print('Iteração: ', maxiter)
-    print('interseção: ', inter)
+                        while check_if_intercepts(l1, l2):
+                            l1 = rotate_l(l1, drange)
+                        ndf.geometry.iloc[idx] = l1
+
+    ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:1], ndf], ignore_index=True))
+
     return ndf
 
 def crio(volume):

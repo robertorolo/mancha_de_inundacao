@@ -5,7 +5,7 @@
 __author__ = "Roberto Mentzingen Rolo"
 
 #importando pacotes 
-from tkinter import Tk, ttk, Label, Button, Entry, StringVar
+from tkinter import Tk, ttk, Label, Button, Entry, StringVar, Checkbutton, IntVar
 from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
 import geopandas
 import rasterio
@@ -71,6 +71,11 @@ def calcular_perpendiculares():
     s, ds = secoes_perpendiculares(tracado_simplificado, n=21, comprimento=comp)
     s.crs = 'EPSG:31982'
     st = s.to_crs(epsg=4326)
+    
+    intersec_check = int(c_intersec_var.get())
+    if intersec_check == 1:
+        maxiter = int(entry_maxiter.get())
+        st = rotate_secs(st, maxiter=maxiter, drange=[-10,10])
 
     print('Feche a janela do mapa para contnuar.')
     fig, ax = plt.subplots(figsize=(8,8))
@@ -81,6 +86,10 @@ def calcular_perpendiculares():
 
     plt.legend()
     plt.show()
+
+    if intersec_check == 1:
+        st = st.to_crs(epsg=31982)
+        s = st
  
 def calcular():
     print('Cálculo hídrico iniciado...')
@@ -139,6 +148,9 @@ def exportar_secoes():
     
     exportar_geopandas(s, nome_do_arquivo=shape_flname)
     btn_export["text"] = "Traçado exportado"
+
+def enable_maxiter():
+    entry_maxiter['state'] = 'normal'
 
 #GUI
 root = Tk()
@@ -216,14 +228,27 @@ entry_comp = Entry(tab2, width=8)
 entry_comp.insert(0, "4000")
 entry_comp.grid(row=3, column=1, sticky='E', padx=10, pady=10)
 
+#intersections
+c_intersec_var = IntVar()
+c_intersec = Checkbutton(tab2, text='Desinterceptar seções',variable=c_intersec_var, onvalue=1, offvalue=0, command=enable_maxiter)
+c_intersec.grid(row=4, column=0, sticky='W', padx=10, pady=10)
+
+label_maxiter = Label(tab2, text="Número máximo de iterações:")
+label_maxiter.grid(row=5, column=0, sticky='W', padx=10, pady=10)
+entry_maxiter = Entry(tab2, width=8)
+entry_maxiter.insert(0, "5000")
+entry_maxiter['state'] = 'disabled'
+entry_maxiter.grid(row=5, column=1, sticky='E', padx=10, pady=10)
+
+
 btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
-btn_export.grid(row=4, column=0, sticky='W', padx=10, pady=10)
+btn_export.grid(row=6, column=0, sticky='W', padx=10, pady=10)
 
 btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
-btn_import.grid(row=4, column=1, sticky='W', padx=10, pady=10)
+btn_import.grid(row=6, column=1, sticky='W', padx=10, pady=10)
 
 btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=5, column=1, sticky='E', padx=10, pady=10)
+btn_calculartab2.grid(row=7, column=1, sticky='E', padx=10, pady=10)
 
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
 btn_calculartab3.grid(row=0, column=0, sticky='E', padx=10, pady=10)
