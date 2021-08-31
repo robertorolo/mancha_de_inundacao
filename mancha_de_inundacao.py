@@ -15,6 +15,7 @@ from scipy.interpolate import Rbf
 import simplekml
 import pandas as pd
 import geopandas
+from time import time
 
 def rotate_l(l1, drange):
     #gira um linha em seu centro um valor aleatorio em graus entre um range definido
@@ -25,40 +26,60 @@ def rotate_l(l1, drange):
 def check_if_intercepts(l1, l2):
     return l1.intersects(l2)
 
-def rotate_secs(sec_df, maxiter=5000, drange=[-10,10]):
+def check_all(ndf):
+    intersect = False
+    for i in range(ndf.shape[0]-1):
+        for j in range(ndf.shape[0]-1):
+            if i != j:
+                l1 = ndf.iloc[i].geometry
+                l2 = ndf.iloc[j].geometry
+                if check_if_intercepts(l1, l2):
+                    intersect = True
+    return intersect
+
+def rotate_secs(sec_df, maxiter=1000, drange=[-10,10]):
     #tenta desiterceptar as seções
-    print('Insto pode demorar um pouco')
+    print('Isto pode demorar')
+    t1 = time()
     ndf = sec_df.iloc[2:].copy(deep=False)
     ndf = ndf.reset_index(drop=True)
-    inter = True
-    
-    for i in range(maxiter):
 
+    while check_all(ndf):
+    
         for idx in range(ndf.shape[0]-1):
             if idx == 0:
                 l1 = ndf.iloc[idx].geometry
                 l2 = ndf.iloc[idx+1].geometry
-                while check_if_intercepts(l1, l2):
+                itera = 0
+                while check_if_intercepts(l1, l2) and itera <= maxiter:
                     l1 = rotate_l(l1, drange)
+                    itera = itera + 1
                 ndf.iloc[idx].geometry = l1
 
             elif idx == ndf.shape[0]-1:
                 l1 = ndf.iloc[idx].geometry
                 l2 = ndf.iloc[idx-1].geometry
-                while check_if_intercepts(l1, l2):
+                itera = 0
+                while check_if_intercepts(l1, l2) and itera <= maxiter:
                     l1 = rotate_l(l1, drange)
+                    itera = itera + 1
                 ndf.geometry.iloc[idx] = l1
 
             else:
-                for i in [-1,1]:
-                        l1 = ndf.iloc[idx].geometry
-                        l2 = ndf.iloc[idx+i].geometry
-                        while check_if_intercepts(l1, l2):
-                            l1 = rotate_l(l1, drange)
-                        ndf.geometry.iloc[idx] = l1
+                l1 = ndf.iloc[idx].geometry
+                l2 = ndf.iloc[idx-1].geometry
+                l3 = ndf.iloc[idx+1].geometry
+                itera = 0
+                while (check_if_intercepts(l1, l2) or check_if_intercepts(l1, l3)) and itera <= maxiter:
+                    l1 = rotate_l(l1, drange)
+                    itera = itera + 1
+                ndf.geometry.iloc[idx] = l1
 
     ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:1], ndf], ignore_index=True))
 
+    t2 = time()
+    delta_t = t2 - t1
+    print('Isto levou {} segundos \n'.format(int(delta_t)))
     return ndf
 
 def crio(volume):

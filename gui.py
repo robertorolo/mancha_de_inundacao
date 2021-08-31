@@ -38,6 +38,8 @@ def calcular_crio():
     criov = crio(v)
     crio_var.set(str(round(criov,2)))
 
+    tabControl.tab(1,state="normal")
+
 def carregar_tracado():
     print('Lendo traçado do rio...')
     tracado_arquivo = askopenfilename()
@@ -90,6 +92,8 @@ def calcular_perpendiculares():
     if intersec_check == 1:
         st = st.to_crs(epsg=31982)
         s = st
+
+    tabControl.tab(2,state="normal")
  
 def calcular():
     print('Cálculo hídrico iniciado...')
@@ -165,8 +169,8 @@ tab2 = ttk.Frame(tabControl)
 tab3 = ttk.Frame(tabControl)
 
 tabControl.add(tab1, text='Passo 1')
-tabControl.add(tab2, text='Passo 2')
-tabControl.add(tab3, text='Passo 3')
+tabControl.add(tab2, text='Passo 2', state="disabled")
+tabControl.add(tab3, text='Passo 3',  state="disabled")
 
 tabControl.pack(expand=1, fill="both")
 
