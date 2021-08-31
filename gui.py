@@ -240,7 +240,7 @@ c_intersec.grid(row=4, column=0, sticky='W', padx=10, pady=10)
 label_maxiter = Label(tab2, text="Número máximo de iterações:")
 label_maxiter.grid(row=5, column=0, sticky='W', padx=10, pady=10)
 entry_maxiter = Entry(tab2, width=8)
-entry_maxiter.insert(0, "5000")
+entry_maxiter.insert(0, "1000")
 entry_maxiter['state'] = 'disabled'
 entry_maxiter.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 

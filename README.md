@@ -32,6 +32,10 @@ O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso 
 
 ![alt text](figs/mapa_secs.PNG)
 
+A opção desinterceptar seções gera seção que não se interceptam, entretanto, o processo pode ser demorado.
+
+![alt text](figs/mapa_secs_removed.PNG)
+
 ## Passo 3
 
 No passo três os cálculos hidráulicos são feitos sem a interação do usuário. Algumas simplificações e adaptações em relação à metodologia originalmente proposta foram necessárias para agilizar e tornar o fluxo de trabalho mais eficiente.
@@ -41,6 +45,8 @@ No passo três os cálculos hidráulicos são feitos sem a interação do usuár
 O programa mostra um mapa da mancha de inundação para conferência e salva um conjunto de pontos alagados em formato `.kml` que pode ser visualizado no Google Earth.
 
 ![alt text](figs/mancha1.PNG)
+
+![alt text](figs/mancha2.PNG)
 
 ![alt text](figs/pts_alagados.PNG)
 
