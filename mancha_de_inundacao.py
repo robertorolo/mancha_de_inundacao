@@ -16,6 +16,23 @@ import simplekml
 import pandas as pd
 import geopandas
 from time import time
+import alphashape
+
+def mancha_pts_to_shape(x, y, mancha, alpha):
+    f = mancha == 1
+    df = pd.DataFrame(
+    {'Latitude': y[f],
+     'Longitude': x[f]})
+
+    gdf = geopandas.GeoDataFrame(
+    df, geometry=geopandas.points_from_xy(df.Longitude, df.Latitude))
+    gdf.crs = 'EPSG:31982' #metros
+
+    alpha_shape = alphashape.alphashape(gdf, alpha)
+
+    #alpha_shape = alpha_shape.to_crs(epsg=4326) #graus
+
+    return alpha_shape
 
 def rotate_l(l1, drange):
     #gira um linha em seu centro um valor aleatorio em graus entre um range definido

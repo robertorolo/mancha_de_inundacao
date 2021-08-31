@@ -120,11 +120,14 @@ def calcular():
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
 
+    global xcoords
+    global ycoords
     xcoords, ycoords, z = get_coordinates(clipado)
 
     v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
+    global mancha
     mancha = np.where(v_int > z, 1, 0)
-    
+
     print('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
     ax.scatter(xcoords, ycoords, c=mancha, s=2)
@@ -133,13 +136,13 @@ def calcular():
     s.plot(ax=ax, color='red')
     plt.show()
 
-    kml_flname = asksaveasfilename(defaultextension=".kml")
-    points_to_kml(xcoords, ycoords, mancha, kml_flname)
-
     print('Finalizado!')
+    entry_alpha['state'] = 'normal'
+    btn_calculartab3['state'] = 'normal'
     
     for idx in range(len(qs)):
         print('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
+        print('\n')
 
 def importar_secoes():
     global s
@@ -155,6 +158,32 @@ def exportar_secoes():
 
 def enable_maxiter():
     entry_maxiter['state'] = 'normal'
+
+def calcular_shape():
+
+    alpha = entry_alpha.get()
+    alpha = float(alpha.replace(',','.'))
+
+    global alpha_shape
+    alpha_shape = mancha_pts_to_shape(xcoords, ycoords, mancha, alpha)
+    
+    print('Feche a janela do mapa para continuar.')
+    fig, ax = plt.subplots(figsize=(8,8))
+    ax.scatter(xcoords, ycoords, c=mancha, s=2)
+    s.crs = 'EPSG:4326'
+    st = s.to_crs(epsg=31982)
+    s.plot(ax=ax, color='red')
+    alpha_shape.plot(ax=ax, alpha=0.9, color='black')
+    plt.show()
+    
+    btn_salvartab3['state'] = 'normal'
+
+def salvartab3():
+    #kml_flname = asksaveasfilename(defaultextension=".kml")
+    kml_flname = asksaveasfilename()
+    points_to_kml(xcoords, ycoords, mancha,kml_flname+str('_pts.kml'))
+    alpha_shape.to_file(kml_flname+str('_shape.kml'), driver='KML')
+    print('Arquivos salvos!')
 
 #GUI
 root = Tk()
@@ -211,7 +240,7 @@ label_crio_resultado.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
 #calcular
 calcular_crio = Button(tab1, text="Calcular", command=calcular_crio)
-calcular_crio.grid(row=6, column=1, sticky='E', padx=10, pady=10)
+calcular_crio.grid(row=6, column=1, sticky='W', padx=10, pady=10)
 
 #Tab2
 btn_tracado = Button(tab2, text="Carregar traçado do rio", command=carregar_tracado)
@@ -244,7 +273,6 @@ entry_maxiter.insert(0, "1000")
 entry_maxiter['state'] = 'disabled'
 entry_maxiter.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
-
 btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
 btn_export.grid(row=6, column=0, sticky='W', padx=10, pady=10)
 
@@ -252,9 +280,25 @@ btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
 btn_import.grid(row=6, column=1, sticky='W', padx=10, pady=10)
 
 btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=7, column=1, sticky='E', padx=10, pady=10)
+btn_calculartab2.grid(row=7, column=1, sticky='W', padx=10, pady=10)
+
+#tab3
+label_alpha = Label(tab3, text="Alpha:")
+label_alpha.grid(row=0, column=0, sticky='W', padx=10, pady=10)
+entry_alpha = Entry(tab3, width=8)
+entry_alpha.insert(0, "0.01")
+entry_alpha['state'] = 'disabled'
+entry_alpha.grid(row=0, column=1, sticky='E', padx=10, pady=10)
 
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
-btn_calculartab3.grid(row=0, column=0, sticky='E', padx=10, pady=10)
+btn_calculartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
+
+btn_calculartab3 = Button(tab3, text="(Re)calcular shape", command=calcular_shape)
+btn_calculartab3['state'] = 'disabled'
+btn_calculartab3.grid(row=1, column=1, sticky='W', padx=10, pady=10)
+
+btn_salvartab3 = Button(tab3, text="Salvar", command=salvartab3)
+btn_salvartab3['state'] = 'disabled'
+btn_salvartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
 
 root.mainloop()

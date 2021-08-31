@@ -2,5 +2,6 @@
 /arquivos_para_testes
 /__pycache__
 /paper_figs
-*.srtm
+clipado
+srtm_cortado
 secs*
