@@ -34,7 +34,7 @@ O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso 
 
 A opção desinterceptar seções gera seção que não se interceptam, entretanto, o processo pode ser demorado.
 
-![alt text](figs/mapa_secs_removed.PNG)
+![alt text](figs/mapa_secs_removed.png)
 
 ## Passo 3
 
@@ -46,7 +46,7 @@ O programa mostra um mapa da mancha de inundação para conferência e salva um 
 
 ![alt text](figs/mancha1.PNG)
 
-![alt text](figs/mancha2.PNG)
+![alt text](figs/mancha2.png)
 
 ![alt text](figs/pts_alagados.PNG)
 
