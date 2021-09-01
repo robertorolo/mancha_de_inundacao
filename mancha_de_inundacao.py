@@ -19,6 +19,7 @@ from time import time
 import alphashape
 
 def mancha_pts_to_shape(x, y, mancha, alpha):
+    #alpha shape a partir das coordenadas
     f = mancha == 1
     df = pd.DataFrame(
     {'Latitude': y[f],
@@ -30,7 +31,7 @@ def mancha_pts_to_shape(x, y, mancha, alpha):
 
     alpha_shape = alphashape.alphashape(gdf, alpha)
     
-    alpha_shape = alphashape.buffer(10.0, join_style=1).buffer(-10.0, join_style=1)
+    alpha_shape = alphashape.buffer(10.0, join_style=1).buffer(-10.0, join_style=1) #suaviza o shape
 
     #alpha_shape = alpha_shape.to_crs(epsg=4326) #graus
 
@@ -43,9 +44,11 @@ def rotate_l(l1, drange):
     return nl
 
 def check_if_intercepts(l1, l2):
+    #verifica se duas secoes se interceptam
     return l1.intersects(l2)
 
 def check_all(ndf):
+    #verifica se uma secao se intercepta com qualquer outra
     intersect = False
     for i in range(ndf.shape[0]-1):
         for j in range(ndf.shape[0]-1):
