@@ -294,7 +294,7 @@ entry_alpha.insert(0, "0.01")
 entry_alpha['state'] = 'disabled'
 entry_alpha.grid(row=0, column=1, sticky='E', padx=10, pady=10)
 
-label_buffer = Label(tab3, text="Alpha:")
+label_buffer = Label(tab3, text="Buffer:")
 label_buffer.grid(row=1, column=0, sticky='W', padx=10, pady=10)
 entry_buffer = Entry(tab3, width=8)
 entry_buffer.insert(0, "30")
