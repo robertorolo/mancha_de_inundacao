@@ -29,6 +29,8 @@ def mancha_pts_to_shape(x, y, mancha, alpha):
     gdf.crs = 'EPSG:31982' #metros
 
     alpha_shape = alphashape.alphashape(gdf, alpha)
+    
+    alpha_shape = alphashape.buffer(10.0, join_style=1).buffer(-10.0, join_style=1)
 
     #alpha_shape = alpha_shape.to_crs(epsg=4326) #graus
 
