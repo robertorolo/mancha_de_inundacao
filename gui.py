@@ -138,6 +138,7 @@ def calcular():
 
     print('Finalizado!')
     entry_alpha['state'] = 'normal'
+    entry_buffer['state'] = 'normal'
     btn_calculartab3['state'] = 'normal'
     
     for idx in range(len(qs)):
@@ -163,9 +164,12 @@ def calcular_shape():
 
     alpha = entry_alpha.get()
     alpha = float(alpha.replace(',','.'))
+    
+    buffer = entry_buffer.get()
+    buffer = float(buffer.replace(',','.'))
 
     global alpha_shape
-    alpha_shape = mancha_pts_to_shape(xcoords, ycoords, mancha, alpha)
+    alpha_shape = mancha_pts_to_shape(xcoords, ycoords, mancha, alpha, buffer)
     
     print('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
@@ -290,15 +294,22 @@ entry_alpha.insert(0, "0.01")
 entry_alpha['state'] = 'disabled'
 entry_alpha.grid(row=0, column=1, sticky='E', padx=10, pady=10)
 
+label_buffer = Label(tab3, text="Alpha:")
+label_buffer.grid(row=1, column=0, sticky='W', padx=10, pady=10)
+entry_buffer = Entry(tab3, width=8)
+entry_buffer.insert(0, "30")
+entry_buffer['state'] = 'disabled'
+entry_buffer.grid(row=1, column=1, sticky='E', padx=10, pady=10)
+
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
-btn_calculartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
+btn_calculartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
 
 btn_calculartab3 = Button(tab3, text="(Re)calcular shape", command=calcular_shape)
 btn_calculartab3['state'] = 'disabled'
-btn_calculartab3.grid(row=1, column=1, sticky='W', padx=10, pady=10)
+btn_calculartab3.grid(row=2, column=1, sticky='W', padx=10, pady=10)
 
 btn_salvartab3 = Button(tab3, text="Salvar", command=salvartab3)
 btn_salvartab3['state'] = 'disabled'
-btn_salvartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
+btn_salvartab3.grid(row=3, column=0, sticky='W', padx=10, pady=10)
 
 root.mainloop()

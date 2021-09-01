@@ -18,7 +18,7 @@ import geopandas
 from time import time
 import alphashape
 
-def mancha_pts_to_shape(x, y, mancha, alpha):
+def mancha_pts_to_shape(x, y, mancha, alpha, buffer):
     #alpha shape a partir das coordenadas
     f = mancha == 1
     df = pd.DataFrame(
@@ -31,7 +31,10 @@ def mancha_pts_to_shape(x, y, mancha, alpha):
 
     alpha_shape = alphashape.alphashape(gdf, alpha)
     
-    alpha_shape = alphashape.buffer(10.0, join_style=1).buffer(-10.0, join_style=1) #suaviza o shape
+    #alpha_shape = alpha_shape.buffer(300.0, join_style=1).buffer(-300.0, join_style=1) #suaviza o shape
+    
+    if buffer > 0:
+        alpha_shape = alpha_shape.buffer(buffer)
 
     #alpha_shape = alpha_shape.to_crs(epsg=4326) #graus
 
@@ -59,14 +62,17 @@ def check_all(ndf):
                     intersect = True
     return intersect
 
-def rotate_secs(sec_df, maxiter=1000, drange=[-10,10]):
+def rotate_secs(sec_df, maxiter=1000, maxtime=5, drange=[-10,10]):
     #tenta desiterceptar as seções
-    print('Isto pode demorar')
+    print('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
     t1 = time()
+    delta_t = 0
     ndf = sec_df.iloc[2:].copy(deep=False)
     ndf = ndf.reset_index(drop=True)
 
-    while check_all(ndf):
+    while check_all(ndf) and delta_t <= maxtime*60:
+        t2 = time()
+        delta_t = t2-t1
     
         for idx in range(ndf.shape[0]-1):
             if idx == 0:
@@ -99,9 +105,9 @@ def rotate_secs(sec_df, maxiter=1000, drange=[-10,10]):
 
     ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:1], ndf], ignore_index=True))
 
-    t2 = time()
-    delta_t = t2 - t1
     print('Isto levou {} segundos \n'.format(int(delta_t)))
+    if delta_t >= maxtime:
+        print('Nao foi possivel desinterceptar as secoes apos {} minutos. Voce pode tentar novamente.'.format(maxtime))
     return ndf
 
 def crio(volume):
