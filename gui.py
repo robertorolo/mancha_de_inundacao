@@ -77,7 +77,8 @@ def calcular_perpendiculares():
     intersec_check = int(c_intersec_var.get())
     if intersec_check == 1:
         maxiter = int(entry_maxiter.get())
-        st = rotate_secs(st, maxiter=maxiter, drange=[-10,10])
+        maxtime = int(entry_maxtime.get())
+        st = rotate_secs(st, maxiter=maxiter, maxtime=maxtime, drange=[-10,10])
 
     print('Feche a janela do mapa para contnuar.')
     fig, ax = plt.subplots(figsize=(8,8))
@@ -142,6 +143,7 @@ def calcular():
     btn_calculartab3['state'] = 'normal'
     
     for idx in range(len(qs)):
+        print(idx)
         print('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
         print('\n')
 
@@ -159,6 +161,7 @@ def exportar_secoes():
 
 def enable_maxiter():
     entry_maxiter['state'] = 'normal'
+    entry_maxtime['state'] = 'normal'
 
 def calcular_shape():
 
@@ -277,14 +280,21 @@ entry_maxiter.insert(0, "1000")
 entry_maxiter['state'] = 'disabled'
 entry_maxiter.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
+label_maxtime = Label(tab2, text="Tempo máximo (min):")
+label_maxtime.grid(row=6, column=0, sticky='W', padx=10, pady=10)
+entry_maxtime = Entry(tab2, width=8)
+entry_maxtime.insert(0, "5")
+entry_maxtime['state'] = 'disabled'
+entry_maxtime.grid(row=6, column=1, sticky='E', padx=10, pady=10)
+
 btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
-btn_export.grid(row=6, column=0, sticky='W', padx=10, pady=10)
+btn_export.grid(row=7, column=0, sticky='W', padx=10, pady=10)
 
 btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
-btn_import.grid(row=6, column=1, sticky='W', padx=10, pady=10)
+btn_import.grid(row=7, column=1, sticky='W', padx=10, pady=10)
 
 btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=7, column=1, sticky='W', padx=10, pady=10)
+btn_calculartab2.grid(row=8, column=1, sticky='W', padx=10, pady=10)
 
 #tab3
 label_alpha = Label(tab3, text="Alpha:")

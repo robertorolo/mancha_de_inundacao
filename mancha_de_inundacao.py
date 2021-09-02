@@ -103,7 +103,7 @@ def rotate_secs(sec_df, maxiter=1000, maxtime=5, drange=[-10,10]):
                     itera = itera + 1
                 ndf.geometry.iloc[idx] = l1
 
-    ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:1], ndf], ignore_index=True))
+    ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:2], ndf], ignore_index=True))
 
     print('Isto levou {} segundos \n'.format(int(delta_t)))
     if delta_t >= maxtime:
