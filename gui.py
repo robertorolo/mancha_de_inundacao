@@ -134,7 +134,7 @@ def calcular():
     ax.scatter(xcoords, ycoords, c=mancha, s=2)
     s.crs = 'EPSG:4326'
     st = s.to_crs(epsg=31982)
-    s.plot(ax=ax, color='red')
+    s.plot(ax=ax, color='red', aspect=1)
     plt.show()
 
     print('Finalizado!')
@@ -179,7 +179,7 @@ def calcular_shape():
     ax.scatter(xcoords, ycoords, c=mancha, s=2)
     s.crs = 'EPSG:4326'
     st = s.to_crs(epsg=31982)
-    s.plot(ax=ax, color='red')
+    s.plot(ax=ax, color='red', aspect=1)
     alpha_shape.plot(ax=ax, alpha=0.9, color='black')
     plt.show()
     

@@ -112,7 +112,7 @@ def rotate_secs(sec_df, maxiter=1000, maxtime=5, drange=[-10,10]):
 
 def crio(volume):
     #calcula o comprimento do rio a ser modelado a partir da barragem
-    volume = volume * 10e-6 # tranformacao para hm
+    volume = volume * 1E-06 # tranformacao para hm
     crio = 0.0000000887*float(volume)**3 - 0.00026*float(volume)**2 + 0.265*float(volume) + 6.74
     if crio < 5.0:
         crio = 5.0
@@ -399,8 +399,8 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
 
     return alturas_secoes, qs
 
-def rbf_interpolation(x, y, v, xi, yi, function='linear'):
-    #interpola a cota das secoes a partir de uma funcao linear
+def rbf_interpolation(x, y, v, xi, yi, function='thin_plate'):
+    #interpola a cota das secoes
     x, y, z, d = x, y, np.zeros(len(x)), v
     rbfi = Rbf(x, y, z, d, function=function)
     di = rbfi(xi, yi, np.zeros(len(xi)))
