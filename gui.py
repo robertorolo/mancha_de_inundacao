@@ -124,15 +124,14 @@ def calcular():
     global xcoords
     global ycoords
     xcoords, ycoords, z = get_coordinates(clipado)
+    #mascara
+    chull = convex_hull(s)
+    mascara = check_if_is_inside(chull, xcoords, ycoords)
+    xcoords, ycoords, z = xcoords[mascara], ycoords[mascara], z[mascara]
 
     v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
     global mancha
     mancha = np.where(v_int > z, 1, 0)
-    
-    #mascara
-    chull = convex_hull(s)
-    mascara = check_if_is_inside(chull, xcoords, ycoords)
-    xcoords, ycoords, mancha = xcoords[mascara], ycoords[mascara], mancha[mascara]
 
     print('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
