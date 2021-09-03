@@ -18,6 +18,23 @@ import geopandas
 from time import time
 import alphashape
 
+def check_if_is_inside(chull, x, y):
+    #retorna uma mascara pertence ao poligono
+    mask = []
+    pts = [Point(i, j) for i,j in zip(x, y)]
+    for i in pts:
+        if chull.contains(i):
+            mask.append(True)
+        else:
+            mask.append(False)
+    return np.array(mask)
+
+def convex_hull(s):
+    #area em torno das secoes
+    a = geopandas.GeoSeries([i for i in s.iloc[2:].geometry])
+    b = a.unary_union.convex_hull
+    return b
+
 def mancha_pts_to_shape(x, y, mancha, alpha, buffer):
     #alpha shape a partir das coordenadas
     f = mancha == 1

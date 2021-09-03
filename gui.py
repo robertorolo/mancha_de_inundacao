@@ -128,6 +128,11 @@ def calcular():
     v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
     global mancha
     mancha = np.where(v_int > z, 1, 0)
+    
+    #mascara
+    chull = convex_hull(s)
+    mascara = check_if_is_inside(chull, xcoords, ycoords)
+    xcoords, ycoords, mancha = xcoords[mascara], ycoords[mascara], mancha[mascara]
 
     print('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
@@ -145,7 +150,7 @@ def calcular():
     for idx in range(len(qs)):
         print(idx)
         print('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
-        print('\n')
+    print('\n')
 
 def importar_secoes():
     global s
