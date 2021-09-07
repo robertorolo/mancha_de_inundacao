@@ -79,9 +79,9 @@ def check_all(ndf):
                     intersect = True
     return intersect
 
-def rotate_secs(sec_df, maxiter=1000, maxtime=5, drange=[-10,10]):
+def rotate_secs(sec_df, wl, maxiter=1000, maxtime=5, drange=[-10,10]):
     #tenta desiterceptar as seções
-    print('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
+    wl.emit('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
     t1 = time()
     delta_t = 0
     ndf = sec_df.iloc[2:].copy(deep=False)
@@ -122,9 +122,9 @@ def rotate_secs(sec_df, maxiter=1000, maxtime=5, drange=[-10,10]):
 
     ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:2], ndf], ignore_index=True))
 
-    print('Isto levou {} segundos \n'.format(int(delta_t)))
+    wl.emit('Isto levou {} segundos.'.format(int(delta_t)))
     if delta_t >= maxtime:
-        print('Nao foi possivel desinterceptar as secoes apos {} minutos. Voce pode tentar novamente.'.format(maxtime))
+        wl.emit('Nao foi possivel desinterceptar as secoes apos {} minutos. Voce pode tentar novamente.'.format(maxtime))
     return ndf
 
 def crio(volume):
@@ -416,7 +416,7 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
 
     return alturas_secoes, qs
 
-def rbf_interpolation(x, y, v, xi, yi, function='thin_plate'):
+def rbf_interpolation(x, y, v, xi, yi, function='linear'):
     #interpola a cota das secoes
     x, y, z, d = x, y, np.zeros(len(x)), v
     rbfi = Rbf(x, y, z, d, function=function)

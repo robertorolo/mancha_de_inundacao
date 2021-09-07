@@ -5,8 +5,9 @@
 __author__ = "Roberto Mentzingen Rolo"
 
 #importando pacotes 
-from tkinter import Tk, ttk, Label, Button, Entry, StringVar, Checkbutton, IntVar
+from tkinter import Tk, ttk, Label, Button, Entry, StringVar, Checkbutton, IntVar, INSERT
 from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
+from tkinter.scrolledtext import ScrolledText
 import geopandas
 import rasterio
 from rasterio.plot import show
@@ -15,10 +16,21 @@ import matplotlib.pyplot as plt
 import fiona
 from mancha_de_inundacao import *
 import ctypes
+import logging
  
 ctypes.windll.shcore.SetProcessDpiAwareness(1) #texto nitido em monitores de alta resolucao
 
 fiona.supported_drivers['KML'] = 'rw'
+
+class WidgetLogger(logging.Handler):
+    def __init__(self, widget):
+        logging.Handler.__init__(self)
+        self.widget = widget
+
+    def emit(self, record):
+        # Append message (record) to the widget
+        self.widget.insert(INSERT, record + '\n')
+        self.widget.see("end")
 
 def calcular_crio():
     longitude =  float(entry_x.get().replace(',','.'))
@@ -36,26 +48,27 @@ def calcular_crio():
 
     global criov
     criov = crio(v)
-    crio_var.set(str(round(criov,2)))
+
+    wl1.emit('Comprimento do rio: {} km'.format(round(criov,2)))
 
     tabControl.tab(1,state="normal")
 
 def carregar_tracado():
-    print('Lendo traçado do rio...')
+    wl2.emit('Lendo traçado do rio...')
     tracado_arquivo = askopenfilename()
-    print(tracado_arquivo)
+    wl2.emit(tracado_arquivo)
     global tracado
     tracado = geopandas.read_file(tracado_arquivo, driver='KML')
-    print('Traçado do rio lido com sucesso!\n')
+    wl2.emit('Traçado do rio lido com sucesso!')
     btn_tracado["text"] = "Traçado do rio carregado"
 
 def carregar_srtm():
-    print('Lendo SRTM...')
+    wl2.emit('Lendo SRTM...')
     srtm_arquivo = askopenfilename()
-    print(srtm_arquivo)
+    wl2.emit(srtm_arquivo)
     global srtm
     srtm = rasterio.open(srtm_arquivo)
-    print('SRTM lido com sucesso!\n')
+    wl2.emit('SRTM lido com sucesso!')
     btn_srtm["text"] = "SRTM carregado"
 
 def calcular_perpendiculares():
@@ -78,9 +91,9 @@ def calcular_perpendiculares():
     if intersec_check == 1:
         maxiter = int(entry_maxiter.get())
         maxtime = int(entry_maxtime.get())
-        st = rotate_secs(st, maxiter=maxiter, maxtime=maxtime, drange=[-10,10])
+        st = rotate_secs(st, wl=wl2, maxiter=maxiter, maxtime=maxtime, drange=[-10,10])
 
-    print('Feche a janela do mapa para contnuar.')
+    wl2.emit('Feche a janela do mapa para contnuar.')
     fig, ax = plt.subplots(figsize=(8,8))
     
     show(srtm, ax=ax)
@@ -97,7 +110,7 @@ def calcular_perpendiculares():
     tabControl.tab(2,state="normal")
  
 def calcular():
-    print('Cálculo hídrico iniciado...')
+    wl3.emit('Cálculo hídrico iniciado...')
 
     qmax_barr = qmax_barragem(h, v)
     cotas(ponto_informado, srtm, h)
@@ -133,7 +146,7 @@ def calcular():
     global mancha
     mancha = np.where(v_int > z, 1, 0)
 
-    print('Feche a janela do mapa para continuar.')
+    wl3.emit('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
     ax.scatter(xcoords, ycoords, c=mancha, s=2)
     s.crs = 'EPSG:4326'
@@ -141,15 +154,13 @@ def calcular():
     s.plot(ax=ax, color='red', aspect=1)
     plt.show()
 
-    print('Finalizado!')
+    wl3.emit('Finalizado!')
     entry_alpha['state'] = 'normal'
     entry_buffer['state'] = 'normal'
     btn_calculartab3['state'] = 'normal'
     
     for idx in range(len(qs)):
-        print(idx)
-        print('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
-    print('\n')
+        wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
 
 def importar_secoes():
     global s
@@ -178,7 +189,7 @@ def calcular_shape():
     global alpha_shape
     alpha_shape = mancha_pts_to_shape(xcoords, ycoords, mancha, alpha, buffer)
     
-    print('Feche a janela do mapa para continuar.')
+    wl3.emit('Feche a janela do mapa para continuar.')
     fig, ax = plt.subplots(figsize=(8,8))
     ax.scatter(xcoords, ycoords, c=mancha, s=2)
     s.crs = 'EPSG:4326'
@@ -190,11 +201,10 @@ def calcular_shape():
     btn_salvartab3['state'] = 'normal'
 
 def salvartab3():
-    #kml_flname = asksaveasfilename(defaultextension=".kml")
     kml_flname = asksaveasfilename()
     points_to_kml(xcoords, ycoords, mancha,kml_flname+str('_pts.kml'))
     alpha_shape.to_file(kml_flname+str('_shape.kml'), driver='KML')
-    print('Arquivos salvos!')
+    wl3.emit('Arquivos salvos!')
 
 #GUI
 root = Tk()
@@ -241,17 +251,13 @@ entry_h.grid(row=3, column=1, sticky='E', padx=10, pady=10)
 entry_v = Entry(tab1, width=8)
 entry_v.grid(row=4, column=1, sticky='E', padx=10, pady=10)
 
-#crio
-label_crio = Label(tab1, text="Comprimento do rio (km):")
-label_crio.grid(row=5, column=0, sticky='W', padx=10, pady=10)
-
-crio_var = StringVar()
-label_crio_resultado = Label(tab1, textvariable=crio_var)
-label_crio_resultado.grid(row=5, column=1, sticky='E', padx=10, pady=10)
-
 #calcular
 calcular_crio = Button(tab1, text="Calcular", command=calcular_crio)
-calcular_crio.grid(row=6, column=1, sticky='W', padx=10, pady=10)
+calcular_crio.grid(row=5, column=1, sticky='E', padx=10, pady=10)
+
+st1 = ScrolledText(tab1, height=10)
+st1.grid(row=6, column=0, columnspan=2, sticky='E')
+wl1 = WidgetLogger(st1)
 
 #Tab2
 btn_tracado = Button(tab2, text="Carregar traçado do rio", command=carregar_tracado)
@@ -295,10 +301,14 @@ btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
 btn_export.grid(row=7, column=0, sticky='W', padx=10, pady=10)
 
 btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
-btn_import.grid(row=7, column=1, sticky='W', padx=10, pady=10)
+btn_import.grid(row=7, column=1, sticky='E', padx=10, pady=10)
 
 btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=8, column=1, sticky='W', padx=10, pady=10)
+btn_calculartab2.grid(row=8, column=1, sticky='E', padx=10, pady=10)
+
+st2 = ScrolledText(tab2, height=10)
+st2.grid(row=9, column=0, columnspan=2, sticky='E')
+wl2 = WidgetLogger(st2)
 
 #tab3
 label_alpha = Label(tab3, text="Alpha:")
@@ -320,10 +330,14 @@ btn_calculartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
 
 btn_calculartab3 = Button(tab3, text="(Re)calcular shape", command=calcular_shape)
 btn_calculartab3['state'] = 'disabled'
-btn_calculartab3.grid(row=2, column=1, sticky='W', padx=10, pady=10)
+btn_calculartab3.grid(row=2, column=1, sticky='E', padx=10, pady=10)
 
 btn_salvartab3 = Button(tab3, text="Salvar", command=salvartab3)
 btn_salvartab3['state'] = 'disabled'
 btn_salvartab3.grid(row=3, column=0, sticky='W', padx=10, pady=10)
+
+st3 = ScrolledText(tab3, height=10)
+st3.grid(row=4, column=0, columnspan=2, sticky='E')
+wl3 = WidgetLogger(st3)
 
 root.mainloop()
