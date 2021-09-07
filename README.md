@@ -44,5 +44,7 @@ No passo três os cálculos hidráulicos são feitos sem a interação do usuár
 
 O programa mostra uma visualização tridimensional interativa da mancha de inundação para conferência e dá a opção para salvar o polígono que representa a área alagada em formato `.shp` que pode ser visualizado no Google Earth.
 
+![alt text](figs/surface.png)
+
 ![alt text](figs/mancha.png)
 
