@@ -5,18 +5,15 @@ __author__ = "Roberto Mentzingen Rolo"
 #importando pacotes
 import numpy as np
 import numpy.polynomial.polynomial as poly
-from shapely.geometry import Point, LineString, box
+from shapely.geometry import Point, LineString, box, MultiLineString
 from shapely import affinity
 from pyproj import Transformer, transform
 import math
 import rasterio.mask
 import rasterio
-from scipy.interpolate import Rbf
-import simplekml
 import pandas as pd
 import geopandas
 from time import time
-import alphashape
 
 def check_if_is_inside(chull, x, y):
     #retorna uma mascara pertence ao poligono
@@ -34,28 +31,6 @@ def convex_hull(s):
     a = geopandas.GeoSeries([i for i in s.iloc[2:].geometry])
     b = a.unary_union.convex_hull
     return b
-
-def mancha_pts_to_shape(x, y, mancha, alpha, buffer):
-    #alpha shape a partir das coordenadas
-    f = mancha == 1
-    df = pd.DataFrame(
-    {'Latitude': y[f],
-     'Longitude': x[f]})
-
-    gdf = geopandas.GeoDataFrame(
-    df, geometry=geopandas.points_from_xy(df.Longitude, df.Latitude))
-    gdf.crs = 'EPSG:31982' #metros
-
-    alpha_shape = alphashape.alphashape(gdf, alpha)
-    
-    #alpha_shape = alpha_shape.buffer(300.0, join_style=1).buffer(-300.0, join_style=1) #suaviza o shape
-    
-    if buffer > 0:
-        alpha_shape = alpha_shape.buffer(buffer)
-
-    #alpha_shape = alpha_shape.to_crs(epsg=4326) #graus
-
-    return alpha_shape
 
 def rotate_l(l1, drange):
     #gira um linha em seu centro um valor aleatorio em graus entre um range definido
@@ -81,7 +56,6 @@ def check_all(ndf):
 
 def rotate_secs(sec_df, wl, maxiter=1000, maxtime=5, drange=[-10,10]):
     #tenta desiterceptar as seções
-    wl.emit('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
     t1 = time()
     delta_t = 0
     ndf = sec_df.iloc[2:].copy(deep=False)
@@ -122,9 +96,11 @@ def rotate_secs(sec_df, wl, maxiter=1000, maxtime=5, drange=[-10,10]):
 
     ndf = geopandas.GeoDataFrame(pd.concat([sec_df.iloc[:2], ndf], ignore_index=True))
 
-    wl.emit('Isto levou {} segundos.'.format(int(delta_t)))
     if delta_t >= maxtime:
         wl.emit('Nao foi possivel desinterceptar as secoes apos {} minutos. Voce pode tentar novamente.'.format(maxtime))
+    else:
+        wl.emit('Isto levou {} segundos.'.format(int(delta_t)))
+    
     return ndf
 
 def crio(volume):
@@ -416,27 +392,22 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
 
     return alturas_secoes, qs
 
-def rbf_interpolation(x, y, v, xi, yi, function='linear'):
-    #interpola a cota das secoes
-    x, y, z, d = x, y, np.zeros(len(x)), v
-    rbfi = Rbf(x, y, z, d, function=function)
-    di = rbfi(xi, yi, np.zeros(len(xi)))
+def surfaces_to_kml(surf_surface, surf_water, flname):
+    intersection, s1_split, s2_split = surf_surface.intersection(surf_water)
+    linestrings = []
+    number_of_previous_points=0
 
-    return di
+    for i in range(intersection.number_of_cells):
+        index_to_find_length_of_line = i + number_of_previous_points
+        number_of_points_of_line = intersection.lines[index_to_find_length_of_line]
+        values = [intersection.lines[index_to_find_length_of_line+i+1] for i in range(number_of_points_of_line)]
+        points = [intersection.points[value] for value in values]
+        number_of_previous_points = number_of_previous_points + number_of_points_of_line
+        linestrings.append(LineString(np.array(points)))
 
-def points_to_kml(x, y, mancha, flname):
-    #salva o conjunto de pontos em formato kml para visualizacao no google earth
-    x = np.array(x)
-    y = np.array(y)
-    f = mancha == 1
-    x = x[f]
-    y = y[f]
-    xy = transformacao(x, y, d_to_m=False, new=True)
-
-    kml = simplekml.Kml()
-    for x, y in zip(xy[0], xy[1]):
-        pnt = kml.newpoint(description='ponto inundado', coords=[(y, x)])
-        pnt.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/water.png'
-        pnt.style.iconstyle.scale = 0.5
-
-    kml.save(flname)
+    multi_line = MultiLineString(linestrings)
+    int_gdf = geopandas.GeoDataFrame(columns=['Nome', 'geometry'])
+    int_gdf['Nome'] = ['Mancha de inundação']
+    int_gdf['geometry'] = [multi_line]
+    
+    exportar_geopandas(int_gdf, flname)

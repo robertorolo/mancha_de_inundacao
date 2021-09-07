@@ -6,7 +6,7 @@ __author__ = "Roberto Mentzingen Rolo"
 
 #importando pacotes 
 from tkinter import Tk, ttk, Label, Button, Entry, Checkbutton, IntVar, INSERT
-from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.scrolledtext import ScrolledText
 import geopandas
 import rasterio
@@ -18,6 +18,8 @@ from mancha_de_inundacao import *
 import ctypes
 import logging
 import random
+import pyvista as pv
+import pyvistaqt as pvqt
  
 ctypes.windll.shcore.SetProcessDpiAwareness(1) #texto nitido em monitores de alta resolucao
 
@@ -92,17 +94,16 @@ def calcular_perpendiculares():
     if intersec_check == 1:
         maxiter = int(entry_maxiter.get())
         maxtime = int(entry_maxtime.get())
+        wl2.emit('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
         st = rotate_secs(st, wl=wl2, maxiter=maxiter, maxtime=maxtime, drange=[-10,10])
-
-    wl2.emit('Feche a janela do mapa para contnuar.')
-    fig, ax = plt.subplots(figsize=(8,8))
     
+    fig, ax = plt.subplots(figsize=(8,8))
     show(srtm, ax=ax)
     st.plot(ax=ax, color='red')
     ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
 
     plt.legend()
-    plt.show()
+    plt.show(block=False)
 
     if intersec_check == 1:
         st = st.to_crs(epsg=31982)
@@ -121,6 +122,9 @@ def calcular():
 
     alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
 
+    for idx in range(len(qs)):
+        wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
+
     x_all = []
     y_all = []
     h_all = []
@@ -137,38 +141,37 @@ def calcular():
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
 
-    global xcoords
-    global ycoords
     xcoords, ycoords, z = get_coordinates(clipado)
     #mascara
     chull = convex_hull(s)
     mascara = check_if_is_inside(chull, xcoords, ycoords)
     xcoords, ycoords, z = xcoords[mascara], ycoords[mascara], z[mascara]
-
-    v_int = rbf_interpolation(x_all, y_all, h_all, xcoords, ycoords)
-    global mancha
-    mancha = np.where(v_int > z, 1, 0)
-
-    wl3.emit('Feche a janela do mapa para continuar.')
-    fig, ax = plt.subplots(figsize=(8,8))
-    ax.scatter(xcoords, ycoords, c=mancha, s=2)
-    s.crs = 'EPSG:4326'
-    st = s.to_crs(epsg=31982)
-    s.plot(ax=ax, color='red', aspect=1)
-    plt.show()
+    
+    #plotting
+    pts = [[i, j, k] for i, j, k in zip(x_all, y_all, h_all)]
+    pts = np.array(pts)
+    pts_surf = [[i,j,k] for i, j, k in zip(xcoords, ycoords, z)]
+    pts_surf = np.array(pts_surf)
+   
+    p = pvqt.BackgroundPlotter()
+    cloud1 = pv.PolyData(pts)
+    cloud2 = pv.PolyData(pts_surf)
+    global surf_water
+    global surf_surface
+    surf_water = cloud1.delaunay_2d()
+    surf_surface = cloud2.delaunay_2d()
+    p.add_mesh(surf_water, name='water surface', color='blue')
+    p.add_mesh(surf_surface, name='terrain surface', cmap='viridis', scalars=z)
+    p.view_isometric()
 
     wl3.emit('Finalizado!')
-    entry_alpha['state'] = 'normal'
-    entry_buffer['state'] = 'normal'
-    btn_calculartab3['state'] = 'normal'
-    
-    for idx in range(len(qs)):
-        wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
+    btn_salvartab3['state'] = 'normal'
 
 def importar_secoes():
     global s
     s = geopandas.read_file(shape_flname)
     btn_import["text"] = "Traçado importado"
+    wl2.emit('Seções importadas!')
 
 def exportar_secoes():
     global shape_flname
@@ -176,37 +179,16 @@ def exportar_secoes():
     
     exportar_geopandas(s, nome_do_arquivo=shape_flname)
     btn_export["text"] = "Traçado exportado"
+    wl2.emit('Seções exportada como: {}'.format(shape_flname))
 
 def enable_maxiter():
     entry_maxiter['state'] = 'normal'
     entry_maxtime['state'] = 'normal'
 
-def calcular_shape():
-    alpha = entry_alpha.get()
-    alpha = float(alpha.replace(',','.'))
-    
-    buffer = entry_buffer.get()
-    buffer = float(buffer.replace(',','.'))
-
-    global alpha_shape
-    alpha_shape = mancha_pts_to_shape(xcoords, ycoords, mancha, alpha, buffer)
-    
-    wl3.emit('Feche a janela do mapa para continuar.')
-    fig, ax = plt.subplots(figsize=(8,8))
-    ax.scatter(xcoords, ycoords, c=mancha, s=2)
-    s.crs = 'EPSG:4326'
-    st = s.to_crs(epsg=31982)
-    s.plot(ax=ax, color='red', aspect=1)
-    alpha_shape.plot(ax=ax, alpha=0.9, color='black')
-    plt.show()
-    
-    btn_salvartab3['state'] = 'normal'
-
 def salvartab3():
-    kml_flname = asksaveasfilename()
-    points_to_kml(xcoords, ycoords, mancha,kml_flname+str('_pts.kml'))
-    alpha_shape.to_file(kml_flname+str('_shape.kml'), driver='KML')
-    wl3.emit('Arquivos salvos!')
+    shape_flname = asksaveasfilename(defaultextension=".shp")
+    surfaces_to_kml(surf_surface, surf_water, shape_flname)
+    wl3.emit('Arquivo salvo como: {}'.format(shape_flname))
 
 #GUI
 root = Tk()
@@ -312,34 +294,15 @@ st2 = ScrolledText(tab2, height=10)
 st2.grid(row=9, column=0, columnspan=2, sticky='E')
 wl2 = WidgetLogger(st2)
 
-#tab3
-label_alpha = Label(tab3, text="Alpha:")
-label_alpha.grid(row=0, column=0, sticky='W', padx=10, pady=10)
-entry_alpha = Entry(tab3, width=8)
-entry_alpha.insert(0, "0.01")
-entry_alpha['state'] = 'disabled'
-entry_alpha.grid(row=0, column=1, sticky='E', padx=10, pady=10)
-
-label_buffer = Label(tab3, text="Buffer:")
-label_buffer.grid(row=1, column=0, sticky='W', padx=10, pady=10)
-entry_buffer = Entry(tab3, width=8)
-entry_buffer.insert(0, "30")
-entry_buffer['state'] = 'disabled'
-entry_buffer.grid(row=1, column=1, sticky='E', padx=10, pady=10)
-
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
-btn_calculartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
+btn_calculartab3.grid(row=0, column=0, sticky='W', padx=10, pady=10)
 
-btn_calculartab3 = Button(tab3, text="(Re)calcular shape", command=calcular_shape)
-btn_calculartab3['state'] = 'disabled'
-btn_calculartab3.grid(row=2, column=1, sticky='E', padx=10, pady=10)
-
-btn_salvartab3 = Button(tab3, text="Salvar", command=salvartab3)
+btn_salvartab3 = Button(tab3, text="Salvar shape file", command=salvartab3)
 btn_salvartab3['state'] = 'disabled'
-btn_salvartab3.grid(row=3, column=0, sticky='W', padx=10, pady=10)
+btn_salvartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
 
 st3 = ScrolledText(tab3, height=10)
-st3.grid(row=4, column=0, columnspan=2, sticky='E')
+st3.grid(row=2, column=0, columnspan=2, sticky='E')
 wl3 = WidgetLogger(st3)
 
 root.mainloop()

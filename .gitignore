@@ -3,6 +3,6 @@
 /__pycache__
 /paper_figs
 clipado
-srtm_cortado
+srtm_cortado*
 secs*
 *.png

@@ -8,7 +8,7 @@ Implementação em python da metodologia simplificada para definição da mancha
 
 ## Dependeências
 
-    pip install geopandas rasterio scipy simplekml matplotlib
+    pip install geopandas rasterio matplotlib pyvista pyvistaqt pyside2
 
 ## Execução
 
