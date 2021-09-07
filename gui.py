@@ -5,7 +5,7 @@
 __author__ = "Roberto Mentzingen Rolo"
 
 #importando pacotes 
-from tkinter import Tk, ttk, Label, Button, Entry, StringVar, Checkbutton, IntVar, INSERT
+from tkinter import Tk, ttk, Label, Button, Entry, Checkbutton, IntVar, INSERT
 from tkinter.filedialog import askopenfilename, asksaveasfilename, asksaveasfile
 from tkinter.scrolledtext import ScrolledText
 import geopandas
@@ -17,6 +17,7 @@ import fiona
 from mancha_de_inundacao import *
 import ctypes
 import logging
+import random
  
 ctypes.windll.shcore.SetProcessDpiAwareness(1) #texto nitido em monitores de alta resolucao
 
@@ -129,7 +130,9 @@ def calcular():
             x_all.append(xs[idx][idx1])
             y_all.append(ys[idx][idx1])
 
-    flname= 'srtm_cortado' #salva o srtm cortado. pode ser necessario apagar manualmente um arquivo salvo anteriormente
+    int1 = random.randrange(0,9,1)
+    int2 = random.randrange(0,9,1)
+    flname= 'srtm_cortado_'+str(int1)+str(int2)
 
     clip_raster(s, srtm, flname)
     clipado = rasterio.open(flname)
@@ -179,7 +182,6 @@ def enable_maxiter():
     entry_maxtime['state'] = 'normal'
 
 def calcular_shape():
-
     alpha = entry_alpha.get()
     alpha = float(alpha.replace(',','.'))
     
