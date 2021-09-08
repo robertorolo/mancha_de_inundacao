@@ -393,17 +393,19 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
     return alturas_secoes, qs
 
 def surfaces_to_kml(surf_surface, surf_water, flname):
+    #recebe as superficies do terreno e de agua e exporta um arquivo kml
     intersection, s1_split, s2_split = surf_surface.intersection(surf_water)
     linestrings = []
     number_of_previous_points=0
 
     for i in range(intersection.number_of_cells):
-        index_to_find_length_of_line = i + number_of_previous_points
-        number_of_points_of_line = intersection.lines[index_to_find_length_of_line]
-        values = [intersection.lines[index_to_find_length_of_line+i+1] for i in range(number_of_points_of_line)]
-        points = [intersection.points[value] for value in values]
-        number_of_previous_points = number_of_previous_points + number_of_points_of_line
-        linestrings.append(LineString(np.array(points)))
+        if (i + number_of_previous_points) < len(intersection.lines): 
+            index_to_find_length_of_line = i + number_of_previous_points
+            number_of_points_of_line = intersection.lines[index_to_find_length_of_line]
+            values = [intersection.lines[index_to_find_length_of_line+i+1] for i in range(number_of_points_of_line)]
+            points = [intersection.points[value] for value in values]
+            number_of_previous_points = number_of_previous_points + number_of_points_of_line
+            linestrings.append(LineString(np.array(points)))
 
     multi_line = MultiLineString(linestrings)
     int_gdf = geopandas.GeoDataFrame(columns=['Nome', 'geometry'])
