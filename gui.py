@@ -9,6 +9,7 @@ from tkinter import Tk, ttk, Label, Button, Entry, Checkbutton, IntVar, INSERT
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.scrolledtext import ScrolledText
 import geopandas
+import pandas as pd
 import rasterio
 from rasterio.plot import show
 import rasterio.mask
@@ -20,6 +21,7 @@ import logging
 import random
 import pyvista as pv
 import pyvistaqt as pvqt
+import time
  
 ctypes.windll.shcore.SetProcessDpiAwareness(1) #texto nitido em monitores de alta resolucao
 
@@ -95,19 +97,28 @@ def calcular_perpendiculares():
         maxiter = int(entry_maxiter.get())
         maxtime = int(entry_maxtime.get())
         wl2.emit('ATENCAO: Isto pode demorar ate {} minutos!'.format(maxtime))
-        st = rotate_secs(st, wl=wl2, maxiter=maxiter, maxtime=maxtime, drange=[-10,10])
-    
-    fig, ax = plt.subplots(figsize=(8,8))
-    show(srtm, ax=ax)
-    st.plot(ax=ax, color='red')
-    ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
+        root.update()
+        drange = [float(i) for i in entry_g.get().split(',')]
+        st = rotate_secs(st, wl=wl2, maxiter=maxiter, maxtime=maxtime, drange=drange)
 
-    plt.legend()
-    plt.show(block=False)
-
-    if intersec_check == 1:
+        fig, ax = plt.subplots(figsize=(8,8))
+        show(srtm, ax=ax)
+        st.plot(ax=ax, color='red')
+        ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
+        plt.legend()
+        plt.show(block=False)
+        
         st = st.to_crs(epsg=31982)
         s = st
+
+    else:
+    
+        fig, ax = plt.subplots(figsize=(8,8))
+        show(srtm, ax=ax)
+        st.plot(ax=ax, color='red')
+        ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
+        plt.legend()
+        plt.show(block=False)
 
     tabControl.tab(2,state="normal")
  
@@ -118,12 +129,15 @@ def calcular():
     cotas(ponto_informado, srtm, h)
 
     c, dp, xs, ys = cotas_secoes(s, srtm)
+    global ct
     ct = [i[40] for i in c]
 
+    global alturas
+    global qs
     alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
 
-    for idx in range(len(qs)):
-        wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
+    #for idx in range(len(qs)):
+    #    wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
 
     x_all = []
     y_all = []
@@ -166,6 +180,7 @@ def calcular():
 
     wl3.emit('Finalizado!')
     btn_salvartab3['state'] = 'normal'
+    btn_salvarrelatab3['state'] = 'normal'
 
 def importar_secoes():
     global s
@@ -184,11 +199,26 @@ def exportar_secoes():
 def enable_maxiter():
     entry_maxiter['state'] = 'normal'
     entry_maxtime['state'] = 'normal'
+    entry_g['state'] = 'normal'
 
 def salvartab3():
     shape_flname = asksaveasfilename(defaultextension=".shp")
     surfaces_to_kml(surf_surface, surf_water, shape_flname)
     wl3.emit('Arquivo salvo como: {}'.format(shape_flname))
+
+def salvarrelatab3():
+    nomes = ['seção {}'.format(i) for i in range(21)]
+    alturas_a = [alturas[idx]-ct[idx] for idx in range(21)]
+    data_array = np.array(
+        [nomes,
+        ds,
+        qs,
+        alturas_a]
+    ).T
+    df = pd.DataFrame(columns=['Seções', 'Distância', 'Vazão', 'Altura de água'], data=data_array)
+    rela_flname = asksaveasfilename(defaultextension=".csv")
+    df.to_csv(rela_flname, index=False)
+    wl3.emit('Arquivo salvo como: {}'.format(rela_flname))
 
 #GUI
 root = Tk()
@@ -239,8 +269,8 @@ entry_v.grid(row=4, column=1, sticky='E', padx=10, pady=10)
 calcular_crio = Button(tab1, text="Calcular", command=calcular_crio)
 calcular_crio.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
-st1 = ScrolledText(tab1, height=10)
-st1.grid(row=6, column=0, columnspan=2, sticky='E')
+st1 = ScrolledText(tab1, height=10, width=50)
+st1.grid(row=6, column=0, columnspan=2, rowspan=10, sticky='nesw')
 wl1 = WidgetLogger(st1)
 
 #Tab2
@@ -281,19 +311,29 @@ entry_maxtime.insert(0, "5")
 entry_maxtime['state'] = 'disabled'
 entry_maxtime.grid(row=6, column=1, sticky='E', padx=10, pady=10)
 
+label_intg = Label(tab2, text="Intervalo giro:")
+label_intg.grid(row=7, column=0, sticky='W', padx=10, pady=10)
+
+entry_g = Entry(tab2, width=8)
+entry_g.insert(0, "-10, 10")
+entry_g['state'] = 'disabled'
+entry_g.grid(row=7, column=1, sticky='E', padx=10, pady=10)
+
+
 btn_export = Button(tab2, text="Exportar seções", command=exportar_secoes)
-btn_export.grid(row=7, column=0, sticky='W', padx=10, pady=10)
+btn_export.grid(row=8, column=0, sticky='W', padx=10, pady=10)
 
 btn_import = Button(tab2, text="Importar seções", command=importar_secoes)
-btn_import.grid(row=7, column=1, sticky='E', padx=10, pady=10)
+btn_import.grid(row=8, column=1, sticky='E', padx=10, pady=10)
 
 btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculares)
-btn_calculartab2.grid(row=8, column=1, sticky='E', padx=10, pady=10)
+btn_calculartab2.grid(row=9, column=1, sticky='E', padx=10, pady=10)
 
-st2 = ScrolledText(tab2, height=10)
-st2.grid(row=9, column=0, columnspan=2, sticky='E')
+st2 = ScrolledText(tab2, height=10, width=50)
+st2.grid(row=10, column=0, columnspan=2, sticky='E')
 wl2 = WidgetLogger(st2)
 
+#Tab3
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
 btn_calculartab3.grid(row=0, column=0, sticky='W', padx=10, pady=10)
 
@@ -301,7 +341,11 @@ btn_salvartab3 = Button(tab3, text="Salvar shape file", command=salvartab3)
 btn_salvartab3['state'] = 'disabled'
 btn_salvartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
 
-st3 = ScrolledText(tab3, height=10)
+btn_salvarrelatab3 = Button(tab3, text="Salvar relatório", command=salvarrelatab3)
+btn_salvarrelatab3['state'] = 'disabled'
+btn_salvarrelatab3.grid(row=1, column=1, sticky='E', padx=10, pady=10)
+
+st3 = ScrolledText(tab3, height=10, width=50)
 st3.grid(row=2, column=0, columnspan=2, sticky='E')
 wl3 = WidgetLogger(st3)
 

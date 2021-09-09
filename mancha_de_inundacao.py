@@ -369,6 +369,7 @@ def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
     qs = []
     for i in ds:
         qs.append(qmax_secao(i, qmax_barr, v))
+    print(qs)
 
     areas = []
     raios = []
@@ -408,8 +409,8 @@ def surfaces_to_kml(surf_surface, surf_water, flname):
             linestrings.append(LineString(np.array(points)))
 
     multi_line = MultiLineString(linestrings)
-    int_gdf = geopandas.GeoDataFrame(columns=['Nome', 'geometry'])
-    int_gdf['Nome'] = ['Mancha de inundação']
+    int_gdf = geopandas.GeoDataFrame(columns=['description', 'geometry'])
+    int_gdf['description'] = ['Mancha de inundação']
     int_gdf['geometry'] = [multi_line]
     
     exportar_geopandas(int_gdf, flname)
