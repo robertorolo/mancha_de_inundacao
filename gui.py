@@ -270,7 +270,7 @@ calcular_crio = Button(tab1, text="Calcular", command=calcular_crio)
 calcular_crio.grid(row=5, column=1, sticky='E', padx=10, pady=10)
 
 st1 = ScrolledText(tab1, height=10, width=50)
-st1.grid(row=6, column=0, columnspan=2, rowspan=10, sticky='nesw')
+st1.grid(row=6, column=0, columnspan=2, sticky='WE',  padx=10, pady=10)
 wl1 = WidgetLogger(st1)
 
 #Tab2
@@ -330,7 +330,7 @@ btn_calculartab2 = Button(tab2, text="Calcular", command=calcular_perpendiculare
 btn_calculartab2.grid(row=9, column=1, sticky='E', padx=10, pady=10)
 
 st2 = ScrolledText(tab2, height=10, width=50)
-st2.grid(row=10, column=0, columnspan=2, sticky='E')
+st2.grid(row=10, column=0, columnspan=2, sticky='WE',  padx=10, pady=10)
 wl2 = WidgetLogger(st2)
 
 #Tab3
@@ -346,7 +346,7 @@ btn_salvarrelatab3['state'] = 'disabled'
 btn_salvarrelatab3.grid(row=1, column=1, sticky='E', padx=10, pady=10)
 
 st3 = ScrolledText(tab3, height=10, width=50)
-st3.grid(row=2, column=0, columnspan=2, sticky='E')
+st3.grid(row=2, column=0, columnspan=2, sticky='WE',  padx=10, pady=10)
 wl3 = WidgetLogger(st3)
 
 root.mainloop()
