@@ -185,6 +185,16 @@ def calcular():
 def importar_secoes():
     global s
     s = geopandas.read_file(shape_flname)
+    
+    fig, ax = plt.subplots(figsize=(8,8))
+    show(srtm, ax=ax)
+    s.plot(ax=ax, color='red')
+    ax.scatter(ponto_informado.x, ponto_informado.y, color='red', label='Barragem')
+    plt.legend()
+    plt.show(block=False)
+    
+    s = s.to_crs(epsg=31982)
+    
     btn_import["text"] = "Traçado importado"
     wl2.emit('Seções importadas!')
 
