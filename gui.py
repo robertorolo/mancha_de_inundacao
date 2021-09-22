@@ -124,6 +124,8 @@ def calcular_perpendiculares():
  
 def calcular():
     wl3.emit('Cálculo hídrico iniciado...')
+    fc = entry_fc.get()
+    fc = float(fc.replace(',','.'))
 
     qmax_barr = qmax_barragem(h, v)
     cotas(ponto_informado, srtm, h)
@@ -134,7 +136,7 @@ def calcular():
 
     global alturas
     global qs
-    alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h)
+    alturas, qs = altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h, fc)
 
     #for idx in range(len(qs)):
     #    wl3.emit('Seção {}: Vazão: {} - Altura da água: {} - Distância da barragem {}'.format(idx, round(qs[idx],2), round((alturas[idx]-ct[idx]),2), round(ds[idx],2)))
@@ -345,18 +347,24 @@ wl2 = WidgetLogger(st2)
 
 #Tab3
 btn_calculartab3 = Button(tab3, text="Calcular", command=calcular)
-btn_calculartab3.grid(row=0, column=0, sticky='W', padx=10, pady=10)
+btn_calculartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
+
+label_fc = Label(tab3, text="FC:")
+label_fc.grid(row=0, column=0, sticky='W', padx=10, pady=10)
+entry_fc = Entry(tab3, width=8)
+entry_fc.insert(0, "1")
+entry_fc.grid(row=0, column=1, sticky='E', padx=10, pady=10)
 
 btn_salvartab3 = Button(tab3, text="Salvar shape file", command=salvartab3)
 btn_salvartab3['state'] = 'disabled'
-btn_salvartab3.grid(row=1, column=0, sticky='W', padx=10, pady=10)
+btn_salvartab3.grid(row=2, column=0, sticky='W', padx=10, pady=10)
 
 btn_salvarrelatab3 = Button(tab3, text="Salvar relatório", command=salvarrelatab3)
 btn_salvarrelatab3['state'] = 'disabled'
-btn_salvarrelatab3.grid(row=1, column=1, sticky='E', padx=10, pady=10)
+btn_salvarrelatab3.grid(row=2, column=1, sticky='E', padx=10, pady=10)
 
 st3 = ScrolledText(tab3, height=10, width=50)
-st3.grid(row=2, column=0, columnspan=2, sticky='WE',  padx=10, pady=10)
+st3.grid(row=3, column=0, columnspan=2, sticky='WE',  padx=10, pady=10)
 wl3 = WidgetLogger(st3)
 
 root.mainloop()

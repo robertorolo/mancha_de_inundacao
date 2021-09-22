@@ -357,19 +357,18 @@ def get_coordinates(clipado):
 
     return xcoords[nanfilter], ycoords[nanfilter], b[nanfilter]
 
-def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr):
+def altura_de_agua_secoes(ds, dp, c, qmax_barr, v, h_barr, fc):
     #calcula a altura de agua em cada secao
     ct = [i[40] for i in c]
     j = ((ct[0]+h_barr) - ct[-1])/ds[-1]
 
     #altura maxima simulada
-    fc = 1 #fator de correcao (1 - 6) foi deifinido como 1 para todas as secoes para fins de simplificacao
+    #fator de correcao (1 - 6) 
     alt_max = h_barr/fc
 
     qs = []
     for i in ds:
         qs.append(qmax_secao(i, qmax_barr, v))
-    print(qs)
 
     areas = []
     raios = []
