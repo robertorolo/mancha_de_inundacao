@@ -94,7 +94,6 @@ class Ui_Dialog(object):
         self.gridLayout_4.addWidget(self.nretasval, 2, 1, 1, 1)
         self.matplotlibwidget = self.canvas
         self.matplotlibwidget.setObjectName("matplotlibwidget")
-        #self.gridLayout_4.addWidget(self.matplotlibwidget, 8, 0, 1, 2)
         self.gridLayout_4.addWidget(self.matplotlibwidget, 8, 0, 1, 2)
         self.mtoolbar = NavigationToolbar(self.canvas, self.matplotlibwidget)
         self.tab2calc = QtWidgets.QPushButton(self.tab_2)
@@ -145,7 +144,7 @@ class Ui_Dialog(object):
         self.savereport = QtWidgets.QPushButton(self.tab_3)
         self.savereport.setObjectName("savereport")
         self.gridLayout_2.addWidget(self.savereport, 2, 0, 1, 1)
-        self.pyvistawidget = QtWidgets.QOpenGLWidget(self.tab_3)
+        self.pyvistawidget = self.p
         self.pyvistawidget.setObjectName("pyvistawidget")
         self.gridLayout_2.addWidget(self.pyvistawidget, 3, 0, 1, 1)
         self.tabWidget.addTab(self.tab_3, "")
