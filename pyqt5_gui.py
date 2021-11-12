@@ -8,9 +8,12 @@ import matplotlib.pyplot as plt
 from rasterio.plot import show
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from pyvistaqt import BackgroundPlotter
+
+from pyvistaqt import QtInteractor
+import pyvista as pv
 
 import pandas as pd
+import random
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -18,10 +21,10 @@ class Ui_Dialog(object):
         self.fig, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.fig)
         
-        self.p = pvqt.BackgroundPlotter()
+        self.plotter =QtInteractor()
     
         Dialog.setObjectName("Dialog")
-        Dialog.resize(651, 635)
+        Dialog.resize(1366, 768)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
@@ -44,6 +47,7 @@ class Ui_Dialog(object):
         self.longval = QtWidgets.QDoubleSpinBox(self.tab)
         self.longval.setMaximum(1000000.0)
         self.longval.setMinimum(-1000000.0)
+        self.longval.setDecimals(4)
         self.longval.setObjectName("longval")
         self.gridLayout_3.addWidget(self.longval, 1, 2, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.tab)
@@ -52,6 +56,7 @@ class Ui_Dialog(object):
         self.latval = QtWidgets.QDoubleSpinBox(self.tab)
         self.latval.setMaximum(1000000.0)
         self.latval.setMinimum(-1000000.0)
+        self.latval.setDecimals(4)
         self.latval.setObjectName("latval")
         self.gridLayout_3.addWidget(self.latval, 0, 2, 1, 1)
         self.tab1calc = QtWidgets.QPushButton(self.tab)
@@ -134,7 +139,7 @@ class Ui_Dialog(object):
         self.savereport = QtWidgets.QPushButton(self.tab_3)
         self.savereport.setObjectName("savereport")
         self.gridLayout_2.addWidget(self.savereport, 2, 0, 1, 1)
-        self.pyvistawidget = self.p
+        self.pyvistawidget = self.plotter
         self.pyvistawidget.setObjectName("pyvistawidget")
         self.gridLayout_2.addWidget(self.pyvistawidget, 3, 0, 1, 1)
         self.tabWidget.addTab(self.tab_3, "")
@@ -174,9 +179,11 @@ class Ui_Dialog(object):
         self.carregartracado.clicked.connect(self.carregar_tracado)
         self.tab2calc.clicked.connect(self.calcular_perpendiculares)
         self.exportsec.clicked.connect(self.exportar_secoes)
+        self.importsec.clicked.connect(self.importar_secoes)
         
         self.saveshape.clicked.connect(self.save_shp)
         self.savereport.clicked.connect(self.save_report)
+        self.tab3calc.clicked.connect(self.calcular)
         
     def calcrio(self):
         print('Calculando comprimento do rio...')
@@ -197,11 +204,13 @@ class Ui_Dialog(object):
         file_path = QtWidgets.QFileDialog.getOpenFileName(None, "Selecione o SRTM", "", "tif files (*.tif)")
         srtm_arquivo = file_path[0] 
         self.srtm = rasterio.open(srtm_arquivo)
+        print('SRTM carregado!')
         
     def carregar_tracado(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName(None, "Selecione o traçado", "", "kml files (*.kml)")
         tracado_arquivo = file_path[0] 
         self.tracado = geopandas.read_file(tracado_arquivo, driver='KML')
+        print('Traçado carregado!')
 
     def calcular_perpendiculares(self):
         print('Calculando perpendiculares...')
@@ -221,39 +230,42 @@ class Ui_Dialog(object):
         
     def exportar_secoes(self):
         self.shape_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")
-        flname = self.shape_flname[0]
-        exportar_geopandas(self.s, nome_do_arquivo=flname)
+        self.shape_flname = self.shape_flname[0]
+        exportar_geopandas(self.s, nome_do_arquivo=self.shape_flname)
         
-    def importar_secoes():
+    def importar_secoes(self):
         self.s = geopandas.read_file(self.shape_flname)
         
         self.ax.clear()
         show(self.srtm, ax=self.ax)
-        s.plot(ax=self.ax, color='red')
+        self.s.plot(ax=self.ax, color='red')
         self.ax.scatter(self.ponto_informado.x, self.ponto_informado.y, color='red', label='Barragem')
         
         self.s = self.s.to_crs(epsg=31982)
         
     def save_shp(self):
-        self.shape_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")
-        flname = self.shape_flname[0]
-        surfaces_to_kml(surf_surface, surf_water, flname)
+        self.shape_flname_mancha = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")
+        flname = self.shape_flname_mancha[0]
+        surfaces_to_kml(self.surf_surface, self.surf_water, flname)
+        print('Shape file salvo!')
 
     def save_report(self):
         nomes = ['seção {}'.format(i) for i in range(21)]
-        alturas_a = [alturas[idx]-ct[idx] for idx in range(21)]
+        alturas_a = [self.alturas[idx]-self.ct[idx] for idx in range(21)]
         data_array = np.array(
             [nomes,
-            ds,
-            qs,
+            self.ds,
+            self.qs,
             alturas_a]
         ).T
         df = pd.DataFrame(columns=['Seções', 'Distância', 'Vazão', 'Altura de água'], data=data_array)
         self.rela_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "CSV files (*.csv)")
         flname = self.rela_flname[0]
         df.to_csv(flname, index=False)
+        print('Relatório salvo!')
 
-    def calcular():
+    def calcular(self):
+        print('Calculo hídrico iniciado...')
         fc = 1
 
         qmax_barr = qmax_barragem(self.h, self.v)
@@ -262,12 +274,12 @@ class Ui_Dialog(object):
         c, dp, xs, ys = cotas_secoes(self.s, self.srtm)
         self.ct = [i[40] for i in c]
 
-        self.alturas, self.qs = altura_de_agua_secoes(self.ds, self.dp, self.c, self.qmax_barr, self.v, self.h, fc)
+        self.alturas, self.qs = altura_de_agua_secoes(self.ds, dp, c, qmax_barr, self.v, self.h, fc)
 
         x_all = []
         y_all = []
         h_all = []
-        for idx, vv in enumerate(alturas):
+        for idx, vv in enumerate(self.alturas):
             for idx1 in range(len(xs[idx])):
                 h_all.append(vv)
                 x_all.append(xs[idx][idx1])
@@ -296,9 +308,9 @@ class Ui_Dialog(object):
 
         self.surf_water = cloud1.delaunay_2d()
         self.surf_surface = cloud2.delaunay_2d()
-        p.add_mesh(surf_water, name='water surface', color='blue')
-        p.add_mesh(surf_surface, name='terrain surface', cmap='viridis', scalars=z)
-        p.view_isometric()
+        self.plotter.add_mesh(self.surf_water, name='water surface', color='blue')
+        self.plotter.add_mesh(self.surf_surface, name='terrain surface', cmap='viridis', scalars=z)
+        self.plotter.view_isometric()
 
 if __name__ == "__main__":
     import sys
