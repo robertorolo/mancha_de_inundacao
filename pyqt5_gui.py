@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from rasterio.plot import show
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-#from pyvistaqt import BackgroundPlotter
+from pyvistaqt import BackgroundPlotter
 
 import pandas as pd
 
@@ -28,7 +28,7 @@ class Ui_Dialog(object):
         self.fig, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.fig)
         
-        ##self.plotter = BackgroundPlotter()
+        self.p = pvqt.BackgroundPlotter()
     
         Dialog.setObjectName("Dialog")
         Dialog.resize(651, 635)
@@ -263,6 +263,54 @@ class Ui_Dialog(object):
         self.rela_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "CSV files (*.csv)")
         flname = self.rela_flname[0]
         df.to_csv(flname, index=False)
+
+    def calcular():
+        fc = 1
+
+        qmax_barr = qmax_barragem(self.h, self.v)
+        cotas(self.ponto_informado, self.srtm, self.h)
+
+        c, dp, xs, ys = cotas_secoes(self.s, self.srtm)
+        self.ct = [i[40] for i in c]
+
+        self.alturas, self.qs = altura_de_agua_secoes(self.ds, self.dp, self.c, self.qmax_barr, self.v, self.h, fc)
+
+        x_all = []
+        y_all = []
+        h_all = []
+        for idx, vv in enumerate(alturas):
+            for idx1 in range(len(xs[idx])):
+                h_all.append(vv)
+                x_all.append(xs[idx][idx1])
+                y_all.append(ys[idx][idx1])
+
+        int1 = random.randrange(0,9,1)
+        int2 = random.randrange(0,9,1)
+        flname= 'srtm_cortado_'+str(int1)+str(int2)
+
+        clip_raster(self.s, self.srtm, flname)
+        clipado = rasterio.open(flname)
+
+        xcoords, ycoords, z = get_coordinates(clipado)
+        #mascara
+        chull = convex_hull(self.s)
+        mascara = check_if_is_inside(chull, xcoords, ycoords)
+        xcoords, ycoords, z = xcoords[mascara], ycoords[mascara], z[mascara]
+        
+        #plotting
+        pts = [[i, j, k] for i, j, k in zip(x_all, y_all, h_all)]
+        pts = np.array(pts)
+        pts_surf = [[i,j,k] for i, j, k in zip(xcoords, ycoords, z)]
+        pts_surf = np.array(pts_surf)
+       
+        cloud1 = pv.PolyData(pts)
+        cloud2 = pv.PolyData(pts_surf)
+
+        self.surf_water = cloud1.delaunay_2d()
+        self.surf_surface = cloud2.delaunay_2d()
+        p.add_mesh(surf_water, name='water surface', color='blue')
+        p.add_mesh(surf_surface, name='terrain surface', cmap='viridis', scalars=z)
+        p.view_isometric()
 
 if __name__ == "__main__":
     import sys
