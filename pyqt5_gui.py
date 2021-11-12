@@ -20,6 +20,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 #from pyvistaqt import BackgroundPlotter
 
+import pandas as pd
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         
@@ -90,10 +92,9 @@ class Ui_Dialog(object):
         self.nretasval.setProperty("value", 8)
         self.nretasval.setObjectName("nretasval")
         self.gridLayout_4.addWidget(self.nretasval, 2, 1, 1, 1)
-        #self.matplotlibwidget = QtWidgets.QWidget(self.tab_2)
         self.matplotlibwidget = self.canvas
-        self.matplotlibwidget.setEnabled(True)
         self.matplotlibwidget.setObjectName("matplotlibwidget")
+        #self.gridLayout_4.addWidget(self.matplotlibwidget, 8, 0, 1, 2)
         self.gridLayout_4.addWidget(self.matplotlibwidget, 8, 0, 1, 2)
         self.mtoolbar = NavigationToolbar(self.canvas, self.matplotlibwidget)
         self.tab2calc = QtWidgets.QPushButton(self.tab_2)
@@ -185,6 +186,9 @@ class Ui_Dialog(object):
         self.tab2calc.clicked.connect(self.calcular_perpendiculares)
         self.exportsec.clicked.connect(self.exportar_secoes)
         
+        self.saveshape.clicked.connect(self.save_shp)
+        self.savereport.clicked.connect(self.save_report)
+        
     def calcrio(self):
         print('Calculando comprimento do rio...')
         longitude = self.longval.value()
@@ -227,9 +231,9 @@ class Ui_Dialog(object):
         self.ax.scatter(self.ponto_informado.x, self.ponto_informado.y, color='red', label='Barragem')
         
     def exportar_secoes(self):
-        self.shape_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo sera salvo", "", "shp files (*.shp)")
-        
-        exportar_geopandas(self.s, nome_do_arquivo=self.shape_flname)
+        self.shape_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")
+        flname = self.shape_flname[0]
+        exportar_geopandas(self.s, nome_do_arquivo=flname)
         
     def importar_secoes():
         self.s = geopandas.read_file(self.shape_flname)
@@ -240,6 +244,25 @@ class Ui_Dialog(object):
         self.ax.scatter(self.ponto_informado.x, self.ponto_informado.y, color='red', label='Barragem')
         
         self.s = self.s.to_crs(epsg=31982)
+        
+    def save_shp(self):
+        self.shape_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")
+        flname = self.shape_flname[0]
+        surfaces_to_kml(surf_surface, surf_water, flname)
+
+    def save_report(self):
+        nomes = ['seção {}'.format(i) for i in range(21)]
+        alturas_a = [alturas[idx]-ct[idx] for idx in range(21)]
+        data_array = np.array(
+            [nomes,
+            ds,
+            qs,
+            alturas_a]
+        ).T
+        df = pd.DataFrame(columns=['Seções', 'Distância', 'Vazão', 'Altura de água'], data=data_array)
+        self.rela_flname = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "CSV files (*.csv)")
+        flname = self.rela_flname[0]
+        df.to_csv(flname, index=False)
 
 if __name__ == "__main__":
     import sys
