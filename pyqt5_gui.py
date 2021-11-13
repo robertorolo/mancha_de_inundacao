@@ -18,13 +18,13 @@ import random
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(figsize=(10,10))
         self.canvas = FigureCanvas(self.fig)
         
         self.plotter =QtInteractor()
     
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1366, 768)
+        Dialog.resize(900, 900)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
@@ -148,7 +148,24 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        
+
+        Dialog.setTabOrder(self.latval, self.longval)
+        Dialog.setTabOrder(self.longval, self.hval)
+        Dialog.setTabOrder(self.hval, self.vval)
+        Dialog.setTabOrder(self.vval, self.tab1calc)
+
+        Dialog.setTabOrder(self.tab1calc, self.carregarsrtm)
+        Dialog.setTabOrder(self.carregarsrtm, self.carregartracado)
+        Dialog.setTabOrder(self.carregartracado, self.nretasval)
+        Dialog.setTabOrder(self.nretasval, self.comsecval)
+        Dialog.setTabOrder(self.comsecval, self.exportsec)
+        Dialog.setTabOrder(self.exportsec, self.importsec)
+        Dialog.setTabOrder(self.importsec, self.tab2calc)
+
+        Dialog.setTabOrder(self.tab2calc, self.tab3calc)
+        Dialog.setTabOrder(self.tab3calc, self.saveshape)
+        Dialog.setTabOrder(self.saveshape, self.savereport)
+
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Mancha de inundação"))

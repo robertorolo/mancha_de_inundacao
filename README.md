@@ -8,11 +8,11 @@ Implementação em python da metodologia simplificada para definição da mancha
 
 ## Dependeências
 
-    pip install geopandas rasterio matplotlib pyvista pyvistaqt pyside2
+    pip install geopandas rasterio matplotlib pyqt5 pyvista pyvistaqt
 
 ## Execução
 
-    python gui.py
+    python pyqt5_gui.py
   
 ## Passo 1
 
@@ -28,13 +28,9 @@ O número de retas para simplificação do traçado do rio e o comprimento das s
 
 ![alt text](figs/p2.png)
 
-O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso o usuário não esteja satisfeito com o resultado é possível exportar um arquivo `.shp`. As seções podem ser giradas em torno do traçado para evitar cruzamntos. O novo arquivo `.shp` deve ser anexado e o cálculo feito novamente.
+O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso o usuário não esteja satisfeito com o resultado é possível exportar um arquivo `.shp`. As seções podem ser giradas em torno do traçado para evitar cruzamntos em um software gis e facimlmente reimportadas no software. 
 
-![alt text](figs/secs1.png)
-
-A opção desinterceptar seções gera seção que não se interceptam, entretanto, o processo pode ser demorado.
-
-![alt text](figs/secs2.png)
+![alt text](figs/p2_1.png)
 
 ## Passo 3
 
@@ -42,9 +38,7 @@ No passo três os cálculos hidráulicos são feitos sem a interação do usuár
 
 ![alt text](figs/p3.png)
 
-O programa mostra uma visualização tridimensional interativa da mancha de inundação para conferência e dá a opção para salvar o polígono que representa a área alagada em formato `.shp` que pode ser visualizado no Google Earth.
-
-![alt text](figs/surface.png)
+O programa mostra uma visualização tridimensional interativa da mancha de inundação para conferência e dá a opção para salvar o polígono que representa a área alagada em formato `.shp` que pode ser visualizado no Google Earth e um relatório em `.csv` com as vazões e alturas de água em cada seção.
 
 ![alt text](figs/mancha.png)
 
