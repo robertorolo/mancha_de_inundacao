@@ -28,11 +28,11 @@ O passo um consiste em informar parâmtros básicos do barramento. O botão calc
 
 No passo dois o traçado do rio deve ser carregado em formato `.kml`. Um SRTM, que deve ser baixado em formato geotiff em https://earthexplorer.usgs.gov/, também deve ser carregado. 
 
-O número de retas para simplificação do traçado do rio e o comprimento das seções perpendiculares devem ser informadas.
+O número de retas para simplificação do traçado do rio e o comprimento das seções perpendiculares devem ser informadas. O botão calcular mostra as seções perpendiculares, o traçado e o srtm.
 
 ![alt text](figs/p2.PNG)
 
-O botão calcular mostra as seções perpendiculares, o traçado e o srtm. Caso o usuário não esteja satisfeito com o resultado é possível exportar um arquivo `.shp`. As seções podem ser giradas em torno do traçado para evitar cruzamntos em um software gis e facimlmente reimportadas no software. 
+Caso o usuário não esteja satisfeito com o resultado é possível exportar um arquivo `.shp`. As seções podem ser giradas em torno do traçado para evitar cruzamntos em um software gis e facilmente reimportadas para o software. 
 
 ![alt text](figs/p22.PNG)
 
@@ -42,4 +42,4 @@ No passo três os cálculos hidráulicos são feitos sem a interação do usuár
 
 ![alt text](figs/p3.PNG)
 
-O programa mostra uma visualização tridimensional interativa da mancha de inundação para conferência e dá a opção para salvar o polígono que representa a área alagada em formato `.shp` que pode ser visualizado no Google Earth e um relatório em `.csv` com as vazões e alturas de água em cada seção.
+O programa mostra uma visualização tridimensional interativa da mancha de inundação para conferência e dá a opção para salvar o polígono que representa a área alagada em formato `.shp`, que pode ser visualizado no Google Earth, e um relatório em `.csv` com as vazões e alturas de água em cada seção.
