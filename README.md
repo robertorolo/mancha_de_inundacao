@@ -8,7 +8,7 @@ Implementação em python da metodologia simplificada para definição da mancha
 
 ## Tutorial em vídeo
 
-Em breve!
+[Playlist do YouTube](https://www.youtube.com/playlist?list=PL06otLmYiT7i63hWSffcFWsxL3bx6QAHD)
 
 ## Dependências
 
