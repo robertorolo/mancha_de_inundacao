@@ -17,6 +17,8 @@ Implementação em python da metodologia simplificada para definição da mancha
 ## Execução
 
     python pyqt5_gui.py
+
+Alternativamente, um release sandbox pode ser baixado e o programa executado a partir do script `iniciar_mancha_de_inundacao.bat`.
   
 ## Passo 1
 
