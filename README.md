@@ -4,6 +4,8 @@ Implementação em python da metodologia simplificada para definição da mancha
 
 ## Referências
 
+* [A Python implementation for the simplified dam-break flood modeling](https://www.scielo.br/j/rbrh/a/SB6Qgw8JJ89jRzGTzRFshzh/?lang=en)
+
 * [CLASSIFICAÇÃO DE BARRAGENS QUANTO AO DANO POTENCIAL ASSOCIADO: A EXPERIÊNCIA DA AGÊNCIA NACIONAL DE ÁGUAS](https://www.snisb.gov.br/Entenda_Mais/outros/artigo-para-o-dam-world-2018/classificacao-de-barragens-quanto-ao-seu-dano-potencial-associado-2018.docx)
 
 ## Tutorial em vídeo
