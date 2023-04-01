@@ -238,7 +238,7 @@ class Ui_Dialog(object):
         self.tracado_simplificado = simplificar_tracado(self.tracado, n)
 
         self.s, self.ds = secoes_perpendiculares(self.tracado_simplificado, n=21, comprimento=comp)
-        self.s.crs = 'EPSG:31982'
+        self.s.crs = f'EPSG:{datum}'
         st = self.s.to_crs(epsg=4326)
         
         show(self.srtm, ax=self.ax)
@@ -258,7 +258,7 @@ class Ui_Dialog(object):
         self.s.plot(ax=self.ax, color='red')
         self.ax.scatter(self.ponto_informado.x, self.ponto_informado.y, color='red', label='Barragem')
         
-        self.s = self.s.to_crs(epsg=31982)
+        self.s = self.s.to_crs(epsg=datum)
         
     def save_shp(self):
         self.shape_flname_mancha = QtWidgets.QFileDialog.getSaveFileName(None, "Selecione onde o arquivo será salvo", "", "shp files (*.shp)")

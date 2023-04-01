@@ -15,6 +15,9 @@ import pandas as pd
 import geopandas
 from time import time
 
+#SIRGAS 2000 datums: 31982, 5396, 31985, 31984, 31983, 31981, 31980, 31979, 31987
+datum = 31982
+
 def check_if_is_inside(chull, x, y):
     #retorna uma mascara pertence ao poligono
     mask = []
@@ -151,7 +154,7 @@ def cotas(ponto_informado, srtm, altura):
 
 def simplificar_tracado(tracado, n):
     #simplifica o tracado do rio a partir de segmentos de retas
-    tracado = tracado.to_crs(epsg=31982)
+    tracado = tracado.to_crs(epsg=datum)
 
     distances = np.linspace(0, tracado.length, n)
     points = [tracado.interpolate(distance) for distance in distances]
@@ -212,17 +215,17 @@ def secoes_perpendiculares(tracado, n=21, comprimento=4000):
 
 def exportar_geopandas(tracado, nome_do_arquivo='tracado.shp'):
     #exporta o tracado como shp file
-    tracado.crs = 'EPSG:31982'
+    tracado.crs = f'EPSG:{datum}'
     tracado = tracado.to_crs(epsg=4326)
     tracado.to_file(nome_do_arquivo)
 
 def transformacao(x, y, d_to_m, new):
     #tranforma o sistema de coordenadas de um ponto de graus para metros ou vice versa
     if d_to_m:
-        outProj = "epsg:31982"
+        outProj = f"epsg:{datum}"
         inProj = "epsg:4326"
     else:
-        inProj = "epsg:31982"
+        inProj = f"epsg:{datum}"
         outProj = "epsg:4326"
 
     if new:
@@ -326,7 +329,7 @@ def polyfit(x, y, x_i):
 
 def clip_raster(secs, srtm, out_file):
     #corta o srtm a partir do tracado e das secoes
-    secs.crs = 'EPSG:31982'
+    secs.crs = f'EPSG:{datum}'
     secs = secs.to_crs(epsg=4326)
     minx, miny, maxx, maxy = min(secs.bounds['minx']), min(secs.bounds['miny']), max(secs.bounds['maxx']), max(secs.bounds['maxy'])
     bbox = box(minx, miny, maxx, maxy)
