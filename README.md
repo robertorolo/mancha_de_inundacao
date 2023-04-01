@@ -24,7 +24,7 @@ Alternativamente, um release sandbox pode ser baixado e o programa executado a p
   
 ## Passo 1
 
-Antes de começar altere o valor da variável `datum` no arquivo `mancha_de_inundacao.py` para o EPGS (SIRGAS 2000) correspondente. Um seletor para o datum será adicionado à GUI no futuro.
+Antes de começar altere o valor da variável `datum` no arquivo `mancha_de_inundacao.py` para o EPSG (SIRGAS 2000) correspondente. Um seletor para o datum será adicionado à GUI no futuro.
 
 O passo um consiste em informar parâmtros básicos do barramento. O botão calcular retorna o comprimento do trecho do rio que deve ser traçado a partir do barramento. O traçado pode ser feito no Google Earth ou algum outro software GIS.
 
